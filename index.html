@@ -417,8 +417,8 @@
 </main>
 
 <footer>
-  <p>Scout Decode v2.1（查表＋OCR・完整對齊 CODE） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
-  <p>© 2026 Scout System ・ DECODE 係獨立 App，與 Scout System CODE 分開派發、互不連結。加密請用 CODE。</p>
+  <p>Scout Decode v2.2（查表＋OCR・完整對齊 CODE・測試齊備） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
+  <p>© 2026 Scout System ・ 保留一切權利（All rights reserved）・ DECODE 係獨立 App，與 Scout System CODE 分開派發、互不連結。加密請用 CODE。</p>
 </footer>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -480,7 +480,7 @@
   var atbashOut = $('atbashOut'), revOut = $('revOut');
   var toastEl = $('toast');
 
-  var EXAMPLE = 'KHOOR ZRUOG DLUP'; /* −3 → HELLO WORLD SCOUT */
+  var EXAMPLE = 'KHOOR ZRUOG VFRXW'; /* −3 → HELLO WORLD SCOUT */
   var KEYS = { draft: 'scoutDecode.draft', n: 'scoutDecode.n' };
   /* localStorage 可能喺沙盒／私隱模式下被擋：全部包 try-catch，擋咗就當無記憶 */
   var store = {
@@ -583,7 +583,10 @@
 
   nMinus.addEventListener('click', function () { setN(n - 1); });
   nPlus.addEventListener('click', function () { setN(n + 1); });
-  nInput.addEventListener('input', function () { if (this.value !== '') { setN(this.value); } });
+  /* 打字途中只更新 N，唔蓋咗輸入值（例如 99→23 唔會即時蓋去手入面）；blur/change 先正規化顯示 */
+  nInput.addEventListener('input', function () {
+    if (this.value !== '') { n = clampN(this.value); render(); save(); announce(); }
+  });
   nInput.addEventListener('change', function () { setN(this.value); });
 
   btnClear.addEventListener('click', function () {
@@ -1545,8 +1548,5 @@ function runOcr() {
 $('ocrUse').addEventListener('click', function () { useText(ocrText.value.trim()); });
 })();
 </script>
-</body>
-</html>
-ript>
 </body>
 </html>
