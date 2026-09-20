@@ -1,0 +1,29 @@
+# ── 依賴／構建／快取 ──
+node_modules/
+.vercel/
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+.vite/
+.cache/
+.parcel-cache/
+.output/
+__pycache__/
+*.pyc
+
+# ── 開發殘留：備份／暫存／編輯器 ──
+*.bak
+*.tmp
+*.old
+*.log
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── 上傳資料夾（測試上傳用，唔係原始碼） ──
+uploads/

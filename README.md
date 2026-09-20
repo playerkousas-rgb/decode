@@ -90,12 +90,27 @@ node tests/tools.test.mjs    # 電話 T9／座標 Grid／NATO 對齊 CODE 規則
 測試直接由 `index.html` 抽出核心函數（`CORE`／`CV-CORE`／`TOOLS-CORE` 三段）做斷言，測嘅就係真正交付嘅代碼。
 CV 測試用程式合成嘅印刷摩斯／點字影像做端到端斷言（SOS、HI、點字 C／AB、空白影像、極性等）。
 
+> 呢個項目零依賴、冇 `package.json`／build step，所以冇 `npm run check`；上列三份測試就係「check」，
+> 全部出 `0 failed`（合共 76 項）先算過。
+
+## 部署（Vercel）與瘦身
+
+- Vercel 自動偵測做**靜態網站（framework = Other）**，直接 serve 根目錄；輸出只有 `index.html`，**無需 `vercel.json`／`outputDirectory`**。
+- `.vercelignore` 寫明只上傳網頁產物（排除 `.git`、`tests/`、README、暫存／備份檔等），防止儲存空間爆滿。
+- 全 repo 上線部分只有約 72 KB；OCR 引擎行 CDN on-demand（釘死 `tesseract.js@5.1.1`），唔用唔會下載。
+- 防增肥守則見 **`SLIMMING.md`** —— 每次改版前必讀。
+
 ## 結構
 
 ```
 scout-decode/
 ├─ index.html            # 成個 App（inline CSS/JS，單檔、離線可用）
+├─ .vercelignore         # Vercel 上傳排除清單（只上傳網頁產物）
+├─ .gitignore            # 排除依賴／構建／暫存／上傳殘留
+├─ SLIMMING.md           # 防增肥守則（改版前必讀）
 ├─ tests/caesar.test.mjs # Node 單元測試
+├─ tests/tools.test.mjs  # Node 單元測試
+├─ tests/cv.test.mjs     # Node 單元測試
 └─ README.md
 ```
 
@@ -112,6 +127,7 @@ scout-decode/
 
 ## 版本歷史
 
+- **v2.3（2026-09-20）**：部署瘦身與守護 — 加 `.vercelignore`／`.gitignore`／`SLIMMING.md` 防增肥；OCR CDN 由浮動 `tesseract.js@5` 釘死做 `5.1.1`（重現性＋快取）；拍照載入尊重手機 EXIF 旋轉（`createImageBitmap`，唔支援自動退回舊做法）。功能、UI、76 項測試全部不變。
 - **v2.2（2026-08-26）**：補回缺失嘅三份測試（23＋22＋31＝76 項，同 README 對齊）；修正「範例」密文（`DLUP`→`VFRXW`，−3 先真係 `SCOUT`）同 README 凱撒示範；修復 index.html 結尾多餘標籤；版權標示加「保留一切權利」；N 輸入框打字途中唔再俾蓋咗值（blur 先正規化）。
 - **v2.1（2026-08-26）**：查表解碼卡（摩斯打字、電話 T9、座標 Grid＋KEY、NATO 拼音）＋印刷英文 OCR（Tesseract.js，要上網）。**與 CODE 全部 10 種碼對齊**。測試 70 項。
 - **v2.0（2026-08-26）**：新增拍照解密實驗版（紙上摩斯自動辨識、印刷點字自動辨識、朱高輔助對照、旗號火柴人三下點位）。旗號角度表與 CODE App `SEM_ANGLES` 完全對齊。

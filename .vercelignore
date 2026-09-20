@@ -1,0 +1,58 @@
+# ============================================================
+# Vercel 上傳排除清單（.vercelignore）
+# 目的：防止部署儲存空間爆滿 —— 只上傳網頁真正需要嘅檔案。
+# 呢個項目係「單檔靜態 App」：唯一要上線嘅係 index.html。
+# 語法同 .gitignore 一樣；「#」開頭係註解。改完記住 commit。
+# ============================================================
+
+# ── Git 運作檔 ──
+.git
+.gitignore
+.gitattributes
+.gitmodules
+.github
+
+# ── Node／構建工具（如果第日先至有，一律唔上傳） ──
+node_modules
+jspm_packages
+bower_components
+
+# ── 開發殘留：備份／暫存／編輯器 ──
+*.bak
+*.tmp
+*.old
+*.log
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 上傳／測試用資料夾（唔係網頁產物） ──
+uploads
+tests
+
+# ── 構建快取／輸出新舊重複（如果第日引入 build 工具） ──
+dist
+build
+out
+coverage
+.next
+.nuxt
+.vite
+.cache
+.parcel-cache
+.svelte-kit
+.output
+__pycache__
+*.pyc
+target
+
+# ── Vercel 本地快取 ──
+.vercel
+
+# ── 專案文件（唔需要公開／唔係 runtime） ──
+README.md
+SLIMMING.md
+CHANGELOG.md
