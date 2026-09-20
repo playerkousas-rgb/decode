@@ -417,7 +417,7 @@
 </main>
 
 <footer>
-  <p>Scout Decode v2.2（查表＋OCR・完整對齊 CODE・測試齊備） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
+  <p>Scout Decode v2.3（查表＋OCR・完整對齊 CODE・測試齊備） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
   <p>© 2026 Scout System ・ 保留一切權利（All rights reserved）・ DECODE 係獨立 App，與 Scout System CODE 分開派發、互不連結。加密請用 CODE。</p>
 </footer>
 
@@ -1222,10 +1222,8 @@ fileIn.addEventListener('change', function () {
   var f = fileIn.files && fileIn.files[0];
   fileIn.value = '';
   if (!f) { return; }
-  var img = new Image();
   var url = URL.createObjectURL(f);
-  img.onload = function () {
-    URL.revokeObjectURL(url);
+  function processImage(img) {
     var sc = Math.min(1, MAXSIDE / Math.max(img.width, img.height));
     var w = Math.max(1, Math.round(img.width * sc));
     var h = Math.max(1, Math.round(img.height * sc));
@@ -1244,9 +1242,26 @@ fileIn.addEventListener('change', function () {
     drawBase();
     setMsg('已載入相片（' + w + '×' + h + '）。');
     run(st.type);
-  };
-  img.onerror = function () { URL.revokeObjectURL(url); setMsg('開唔到呢張相，試過另一張。'); };
-  img.src = url;
+  }
+  /* 用手機影嘅相多數內含 EXIF 旋轉；用 createImageBitmap(from-image) 尊重方向，
+     failed 或唔支援嘅瀏覽器就退回 <img> 載入（行為同舊版一致）。 */
+  if (window.createImageBitmap) {
+    window.createImageBitmap(f, { imageOrientation: 'from-image' }).then(function (bmp) {
+      URL.revokeObjectURL(url);
+      processImage(bmp);
+      bmp.close();
+    }).catch(function () {
+      var img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); processImage(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); setMsg('開唔到呢張相，試過另一張。'); };
+      img.src = url;
+    });
+  } else {
+    var img = new Image();
+    img.onload = function () { URL.revokeObjectURL(url); processImage(img); };
+    img.onerror = function () { URL.revokeObjectURL(url); setMsg('開唔到呢張相，試過另一張。'); };
+    img.src = url;
+  }
 });
 
 function drawBase() {
@@ -1503,7 +1518,7 @@ var ocrLoading = false;
 function loadTesseract(cb) {
   if (window.Tesseract) { cb(null); return; }
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+  s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
   s.onload = function () { cb(null); };
   s.onerror = function () { cb(new Error('cdn')); };
   document.head.appendChild(s);
