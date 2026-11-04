@@ -8,16 +8,6 @@
 <meta name="description" content="Scout Decode — 童軍密碼解碼助手：凱撒還原（＋/− 與 0–25 全表）、反射 Atbash、倒序。純前端、離線可用、資料只留本機。只做解碼；加密請用 Scout System CODE。">
 <title>Scout Decode ・ 密碼解碼助手</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.6l8.6 3.2v6.2c0 5.4-3.7 9.4-8.6 11.9C7.1 20.4 3.4 16.4 3.4 11V4.8L12 1.6z' fill='%23ffcc00'/%3E%3Ctext x='12' y='16' text-anchor='middle' font-family='monospace' font-size='10' font-weight='700' fill='%2302133e'%3ED%3C/text%3E%3C/svg%3E">
-<!-- Vercel Web Analytics -->
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
-<!-- Vercel Speed Insights -->
-<script>
-  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
 <style>
   :root{
     --navy:#02133e; --navy2:#06255c; --card:#0a2350; --card2:#081d44; --field:#050f2b;
@@ -62,6 +52,7 @@
   #cipher::placeholder{color:#5f729c}
   .input-tools{display:flex;align-items:center;gap:10px;margin-top:10px}
   .count{margin-left:auto;color:var(--muted);font-size:.85rem;font-family:var(--mono)}
+  .privacy-note{margin:9px 0 0;color:var(--muted);font-size:.8rem;line-height:1.45}
 
   /* ---- 按鈕 ---- */
   .btn{min-height:44px;border-radius:11px;border:1px solid transparent;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit}
@@ -184,12 +175,127 @@
   .candbtn .cbar i{display:block;height:100%;background:var(--gold)}
   .candbtn .cpct{font-size:.85rem;color:#ffe27a;min-width:48px;text-align:right;font-family:var(--mono)}
   .btnrow{display:flex;gap:10px;flex-wrap:wrap}
+  /* ---- UI refresh v2.4: clearer hierarchy, responsive workspace, accessible controls ---- */
+  :root{
+    --surface:#0a2350;--surface-raised:#0d2b5e;--surface-inset:#050f2b;
+    --border:rgba(156,181,226,.24);--border-strong:rgba(156,181,226,.42);
+    --muted:#b2c2df;--focus:#ffe27a;
+    --space-1:6px;--space-3:16px;--space-4:24px;
+    --radius-card:20px;--radius-control:12px;
+  }
+  html{scroll-padding-top:86px;scroll-behavior:smooth}
+  body{background-image:radial-gradient(1000px 560px at 50% -180px,rgba(36,99,194,.34),transparent 72%),linear-gradient(180deg,#061a43 0%,var(--navy) 42%)}
+  .skip-link{position:fixed;left:12px;top:10px;z-index:100;transform:translateY(-160%);padding:10px 14px;border-radius:10px;background:var(--gold);color:var(--navy);font-weight:800}
+  .skip-link:focus{transform:translateY(0)}
+  .topbar{max-width:1160px;padding:26px var(--space-4) 18px;gap:16px}
+  .crest{width:52px;height:52px;filter:none}
+  .brand-name{font-size:1.75rem;letter-spacing:.08em}
+  .brand-sub{margin-top:6px;color:#d3def2}
+  .tag-independent{border-color:rgba(255,204,0,.58);background:rgba(255,204,0,.08);padding:4px 11px}
+  .tool-nav{position:sticky;top:0;z-index:20;display:flex;justify-content:center;gap:var(--space-1);max-width:100%;padding:9px 16px;border-block:1px solid rgba(156,181,226,.14);background:rgba(2,19,62,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .tool-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:7px 15px;border:1px solid transparent;border-radius:999px;color:#d9e5fa;text-decoration:none;font-size:.88rem;font-weight:750;white-space:nowrap;transition:background .16s,border-color .16s,color .16s}
+  .tool-nav a:hover,.tool-nav a:focus-visible{border-color:var(--border-strong);background:rgba(255,255,255,.07);color:#fff}
+  main{max-width:1160px;padding:24px var(--space-4) 44px;gap:20px;grid-template-columns:repeat(12,minmax(0,1fr));align-items:start}
+  main>.card:nth-child(1),main>.card:nth-child(4),main>.card:nth-child(5),main>.card:nth-child(6){grid-column:1/-1}
+  main>.card:nth-child(2){grid-column:span 7}
+  main>.pair{grid-column:span 5;display:grid;grid-template-columns:1fr;gap:14px;align-content:start}
+  .card{background:linear-gradient(155deg,var(--surface-raised),var(--card2));border:1px solid var(--border);border-radius:var(--radius-card);padding:22px;box-shadow:0 14px 38px rgba(0,0,0,.2)}
+  .card-label{font-size:.83rem;letter-spacing:.16em;margin-bottom:14px}
+  .card-head{margin-bottom:12px}
+  .hint{line-height:1.55}
+  #cipher{min-height:116px;padding:16px 18px;font-size:1.25rem;border-color:var(--border-strong);border-radius:var(--radius-control);background:var(--surface-inset)}
+  #cipher:focus,.miniin:focus,.keyin:focus,.ptextarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(255,204,0,.12);outline:none}
+  .input-tools{gap:8px;flex-wrap:wrap}
+  .btn{transition:transform .14s,background .14s,border-color .14s}
+  .btn.ghost{border-color:var(--border-strong);color:#e0eaff}
+  .btn.ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,204,0,.55)}
+  .copybtn:hover{background:rgba(255,204,0,.22)}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,.tool-nav a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  .stepper{gap:12px}
+  .btn.step{min-height:80px;background:linear-gradient(180deg,#ffda38,#ffc400);box-shadow:0 4px 0 #b78f00}
+  .btn.step:hover{filter:brightness(1.05)}
+  .nbox{flex-basis:112px}
+  .result{margin-top:18px;padding:16px 18px;border-color:rgba(255,204,0,.52);background:rgba(3,12,34,.68)}
+  .result-text{font-size:clamp(1.4rem,3vw,2rem);line-height:1.55;overflow-wrap:anywhere}
+  .result-text.sm{font-size:clamp(1.1rem,2vw,1.35rem)}
+  .tablewrap{max-height:430px;overflow:auto;overscroll-behavior:contain;border-radius:12px;scrollbar-color:rgba(156,181,226,.5) transparent}
+  .subhead{position:sticky;top:0;z-index:1;margin:0;padding:12px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0}
+  .brute{margin-top:0;border-top:0}
+  .brute button{padding:11px 12px;border-radius:0}
+  .brute button:hover{background:rgba(255,255,255,.055)}
+  .pair .card{height:100%;padding:18px}
+  .pair .result-text{padding:8px 0;overflow-wrap:anywhere}
+  #tableH{margin-bottom:6px}
+  .minitool{padding:var(--space-3);border:1px solid var(--border);border-radius:14px;background:rgba(3,12,34,.25)}
+  .minihead{min-height:28px}
+  .minihead .zh-note{line-height:1.45}
+  .miniin,.keyin,.ptextarea{background:rgba(3,12,34,.74);border-color:var(--border-strong)}
+  .minires{background:rgba(3,12,34,.72);border-color:rgba(255,204,0,.4);min-height:52px}
+  .minirow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}
+  .minirow .minires{grid-column:1/-1;width:100%}
+  .minirow .btn{padding-inline:12px;font-size:.9rem}
+  .keyin{flex-basis:140px}
+  .ptype{background:rgba(3,12,34,.45);border-color:var(--border-strong);transition:background .16s,border-color .16s,transform .16s}
+  .ptype:hover{transform:translateY(-1px);border-color:rgba(255,204,0,.58)}
+  .ptype[aria-pressed="true"]{background:rgba(255,204,0,.15);box-shadow:inset 3px 0 0 var(--gold)}
+  .goldfile{box-shadow:0 4px 0 #b78f00}
+  .goldfile:hover{filter:brightness(1.05)}
+  .info ul{font-size:.95rem;line-height:1.6}
+  footer{max-width:1160px;padding:8px 24px calc(44px + env(safe-area-inset-bottom,0px));line-height:1.65}
+  section[id]{scroll-margin-top:84px}
+  @media (min-width:760px){
+    #tableH{grid-column:1/-1}
+    main>.card:nth-child(4){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  }
+  @media (max-width:900px){
+    main{grid-template-columns:repeat(8,minmax(0,1fr));padding-inline:18px}
+    main>.card:nth-child(2){grid-column:span 5}
+    main>.pair{grid-column:span 3}
+    .card{padding:18px}
+    .tool-nav{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+    .tool-nav::-webkit-scrollbar{display:none}
+  }
+  @media (max-width:680px){
+    html{scroll-padding-top:66px}
+    .topbar{padding:20px 16px 15px;align-items:flex-start}
+    .crest{width:44px;height:44px}
+    .brand-row{gap:7px}
+    .brand-name{font-size:1.45rem}
+    .brand-kicker{font-size:.66rem}
+    .brand-sub{font-size:.82rem;line-height:1.45}
+    .tag-independent{font-size:.62rem;padding:3px 8px}
+    .tool-nav{gap:4px;padding:7px 10px}
+    .tool-nav a{min-height:38px;padding:6px 12px;font-size:.81rem}
+    main{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:16px 14px 32px}
+    main>.card:nth-child(1),main>.card:nth-child(2),main>.pair,main>.card:nth-child(4),main>.card:nth-child(5),main>.card:nth-child(6){grid-column:1}
+    main>.pair{grid-template-columns:1fr;gap:14px}
+    .card{border-radius:17px;padding:17px}
+    #cipher{min-height:104px;font-size:1.1rem}
+    .btn.step{min-height:72px}
+    .nbox{flex-basis:96px}
+    .tablewrap{max-height:380px}
+    .minirow{grid-template-columns:1fr 1fr}
+    .minirow .minires{grid-column:1/-1}
+    .minirow .btn{min-width:0;padding-inline:8px;font-size:.84rem}
+    .minitool{padding:13px}
+    .ptypes{gap:8px}
+    .ptype{padding:11px 10px;font-size:.9rem}
+    .ptype small{font-size:.68rem;line-height:1.4}
+    footer{padding-inline:16px;font-size:.76rem}
+  }
+  @media (max-width:370px){
+    .topbar{gap:10px}.crest{width:38px;height:38px}.brand-name{font-size:1.3rem}
+    .tag-independent{white-space:normal;line-height:1.2}
+    .stepper{gap:7px}.nbox{flex-basis:82px}.btn.step{font-size:1.4rem}
+    .ptypes{grid-template-columns:1fr}
+  }
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
   }
 </style>
 </head>
 <body>
+<a class="skip-link" href="#cipher">跳至密文輸入</a>
 
 <header class="topbar">
   <svg class="crest" viewBox="0 0 24 24" width="46" height="46" aria-hidden="true" focusable="false">
@@ -206,23 +312,30 @@
     <p class="brand-sub">密碼解碼助手 — 見到密文，即刻還原。想加密？用 CODE App。</p>
   </div>
 </header>
+<nav class="tool-nav" aria-label="快速跳至解碼工具">
+  <a href="#inputSection">✍️ 輸入密文</a>
+  <a href="#caesarSection">↔ 凱撒全表</a>
+  <a href="#lookupSection">⌕ 查表解碼</a>
+  <a href="#photoSection">▧ 拍照辨識</a>
+</nav>
 
 <main>
 
   <!-- 輸入 -->
-  <section class="card" aria-labelledby="inputH">
+  <section id="inputSection" class="card" aria-labelledby="inputH">
     <h2 class="card-label" id="inputH">輸入你見到的字</h2>
     <label class="sr-only" for="cipher">密文輸入框：輸入你見到的字，自動轉大寫，最多 200 字元；數字與空白會原樣保留。</label>
-    <textarea id="cipher" maxlength="200" rows="3" spellcheck="false" autocapitalize="characters" autocomplete="off" placeholder="例：KHOOR ZRUOG"></textarea>
+    <textarea id="cipher" maxlength="200" rows="3" spellcheck="false" autocapitalize="characters" autocomplete="off" aria-describedby="cipherMeta" placeholder="例：KHOOR ZRUOG"></textarea>
     <div class="input-tools">
-      <button type="button" id="btnExample" class="btn ghost">範例</button>
-      <button type="button" id="btnClear" class="btn ghost">清除</button>
+      <button type="button" id="btnExample" class="btn ghost">載入範例</button>
+      <button type="button" id="btnClear" class="btn ghost">清除全部</button>
       <span id="count" class="count">0/200</span>
     </div>
+    <p id="cipherMeta" class="privacy-note">🔒 僅保存在此裝置；清除會一併重設位移與本機草稿。</p>
   </section>
 
   <!-- 凱撒 -->
-  <section class="card" aria-labelledby="caesarH">
+  <section id="caesarSection" class="card" aria-labelledby="caesarH">
     <div class="card-head">
       <h2 class="card-label" id="caesarH">凱撒還原 CAESAR</h2>
       <button type="button" id="copyMain" class="copybtn">
@@ -282,7 +395,7 @@
   </div>
 
   <!-- 查表解碼 -->
-  <section class="card" aria-labelledby="tableH">
+  <section id="lookupSection" class="card" aria-labelledby="tableH">
     <h2 class="card-label" id="tableH">查表解碼 ・ 摩斯／電話／座標／NATO</h2>
 
     <div class="minitool">
@@ -331,7 +444,7 @@
   </section>
 
   <!-- 拍照解密（二期・實驗版） -->
-  <section class="card" aria-labelledby="photoH">
+  <section id="photoSection" class="card" aria-labelledby="photoH">
     <div class="card-head">
       <h2 class="card-label" id="photoH">拍照解密 ・ 實驗版</h2>
     </div>
@@ -427,7 +540,7 @@
 </main>
 
 <footer>
-  <p>Scout Decode v2.3（查表＋OCR・完整對齊 CODE・測試齊備） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
+  <p>Scout Decode v2.4（介面升級・查表＋OCR・完整對齊 CODE） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
   <p>© 2026 Scout System ・ 保留一切權利（All rights reserved）・ DECODE 係獨立 App，與 Scout System CODE 分開派發、互不連結。加密請用 CODE。</p>
 </footer>
 
@@ -601,16 +714,20 @@
 
   btnClear.addEventListener('click', function () {
     input.value = '';
+    n = 0;
+    nInput.value = '0';
     store.del(KEYS.draft);
+    store.del(KEYS.n);
     render();
+    announce();
     input.focus();
-    toast('已清除');
+    toast('已清除密文及本機記憶');
   });
   btnExample.addEventListener('click', function () {
     input.value = EXAMPLE;
-    save();
-    render();
-    toast('已載入範例');
+    setN(3); /* 範例密文直接展示 KHOOR → HELLO 的解碼方向 */
+    input.focus();
+    toast('範例已載入：位移 3');
   });
 
   /* 複製：Clipboard API → execCommand 後備 → 選取文字等人手抄 */

@@ -55,4 +55,5 @@ target
 # ── 專案文件（唔需要公開／唔係 runtime） ──
 README.md
 SLIMMING.md
+UI_REVIEW.md
 CHANGELOG.md
