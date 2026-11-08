@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#02133e">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Scout Decode — decode Caesar, Atbash and reversed text. Runs locally and works offline. For encryption, use Scout System CODE.">
+<title>Scout Decode ・ Cipher Decoder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.6l8.6 3.2v6.2c0 5.4-3.7 9.4-8.6 11.9C7.1 20.4 3.4 16.4 3.4 11V4.8L12 1.6z' fill='%23ffcc00'/%3E%3Ctext x='12' y='16' text-anchor='middle' font-family='monospace' font-size='10' font-weight='700' fill='%2302133e'%3ED%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --navy:#02133e; --navy2:#06255c; --card:#0a2350; --card2:#081d44; --field:#050f2b;
+    --line:rgba(122,150,205,.28); --gold:#ffcc00; --gold-soft:rgba(255,204,0,.14);
+    --ink:#f2f6ff; --muted:#9db0d6; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono","Courier New",monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;min-height:100vh;color:var(--ink);
+    background-color:var(--navy);
+    background-image:radial-gradient(900px 520px at 50% -140px,rgba(28,84,180,.38),rgba(2,19,62,0) 70%);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC","PingFang TC","Microsoft JhengHei","Helvetica Neue",Arial,sans-serif;
+  }
+  .mono{font-family:var(--mono)}
+  .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+
+  /* ---- 頁首 ---- */
+  .topbar{max-width:760px;margin:0 auto;padding:22px 16px 8px;display:flex;align-items:center;gap:12px}
+  .crest{flex:0 0 auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+  .brandline{min-width:0}
+  .language-link{margin-left:auto;color:var(--gold);font-weight:700;white-space:nowrap;padding:8px;border:1px solid var(--line);border-radius:10px}
+  .language-link:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .brand-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .brand-kicker{font-size:.72rem;letter-spacing:.4em;color:var(--muted);font-weight:800}
+  .brand-name{font-size:1.55rem;font-weight:900;letter-spacing:.1em;color:var(--gold);line-height:1.1}
+  .tag-independent{font-size:.68rem;font-weight:700;border:1px solid rgba(255,204,0,.5);color:var(--gold);padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .brand-sub{margin:2px 0 0;font-size:.9rem;color:#c9d6f2}
+
+  main{max-width:760px;margin:0 auto;padding:12px 16px 34px;display:grid;gap:16px}
+
+  /* ---- 卡片 ---- */
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  .card-label{margin:0 0 10px;font-size:.76rem;font-weight:800;letter-spacing:.22em;color:var(--gold)}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .card-head .card-label{margin:0}
+
+  /* ---- 輸入 ---- */
+  #cipher{
+    width:100%;min-height:92px;resize:vertical;
+    background:var(--field);color:#fff;border:1.5px solid rgba(122,150,205,.42);border-radius:12px;
+    padding:12px;font-family:var(--mono);font-size:1.15rem;letter-spacing:.06em;line-height:1.5;
+  }
+  #cipher::placeholder{color:#5f729c}
+  .input-tools{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .count{margin-left:auto;color:var(--muted);font-size:.85rem;font-family:var(--mono)}
+  .privacy-note{margin:9px 0 0;color:var(--muted);font-size:.8rem;line-height:1.45}
+
+  /* ---- 按鈕 ---- */
+  .btn{min-height:44px;border-radius:11px;border:1px solid transparent;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit}
+  .btn.ghost{background:transparent;color:#cfe0ff;border-color:rgba(154,178,220,.45);padding:8px 18px}
+  .btn.ghost:active{background:rgba(255,255,255,.1)}
+  .btn.step{
+    flex:1;min-height:72px;font-size:1.65rem;font-weight:900;color:var(--navy);background:var(--gold);
+    border-radius:14px;box-shadow:0 3px 0 #b78f00;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  }
+  .btn.step:active{transform:translateY(2px);box-shadow:0 1px 0 #b78f00}
+  .copybtn{
+    display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border-radius:10px;
+    background:var(--gold-soft);border:1.5px solid rgba(255,204,0,.55);color:#ffd83d;font-weight:700;font-size:.88rem;cursor:pointer;font-family:inherit;
+  }
+  .copybtn:active{background:rgba(255,204,0,.3)}
+  button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid rgba(255,204,0,.6);outline-offset:2px}
+
+  .hint{margin:8px 0 12px;color:var(--muted);font-size:.92rem}
+
+  /* ---- 位移步進 ---- */
+  .stepper{display:flex;gap:10px;align-items:stretch}
+  .nbox{
+    flex:0 0 100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+    background:var(--field);border:1.5px solid rgba(154,178,220,.42);border-radius:14px;padding:6px 4px;
+  }
+  .nbox:focus-within{border-color:var(--gold)}
+  .nlabel{font-size:.68rem;color:var(--muted);letter-spacing:.18em;font-weight:800}
+  #nInput{
+    width:100%;background:transparent;border:0;color:var(--gold);font-family:var(--mono);
+    font-size:1.75rem;font-weight:800;text-align:center;padding:0;
+  }
+  #nInput:focus{outline:none}
+  #nInput::-webkit-outer-spin-button,#nInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  #nInput{-moz-appearance:textfield;appearance:textfield}
+
+  /* ---- 結果 ---- */
+  .result{margin-top:14px;background:var(--field);border:1.5px solid rgba(255,204,0,.4);border-radius:14px;padding:12px 14px}
+  .result-label{margin:0 0 6px;font-size:.72rem;letter-spacing:.18em;color:var(--muted);font-weight:800}
+  .result-text{
+    margin:0;font-family:var(--mono);font-size:clamp(1.25rem,4.6vw,1.7rem);letter-spacing:.05em;
+    word-break:break-all;line-height:1.45;color:#fff;min-height:1.4em;
+  }
+  .result-text.sm{font-size:clamp(1.05rem,3.8vw,1.3rem)}
+
+  /* ---- 0–25 全表 ---- */
+  .subhead{margin:16px 0 0;font-size:.75rem;color:var(--muted);letter-spacing:.16em;font-weight:800}
+  .brute{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid rgba(154,178,220,.22)}
+  .brute button{
+    display:flex;width:100%;gap:12px;align-items:flex-start;padding:10px 8px;min-height:44px;
+    background:none;border:0;border-bottom:1px solid rgba(154,178,220,.16);border-radius:6px;
+    color:inherit;font:inherit;text-align:left;cursor:pointer;
+  }
+  .brute .bnum{flex:0 0 52px;font-family:var(--mono);font-weight:700;color:var(--muted);font-size:.88rem;padding-top:2px}
+  .brute .btext{flex:1;word-break:break-all;font-family:var(--mono);font-size:.97rem;color:#e9f0ff;line-height:1.5}
+  .brute button[aria-current="true"]{background:rgba(255,204,0,.13);box-shadow:inset 3px 0 0 var(--gold)}
+  .brute button[aria-current="true"] .bnum{color:var(--gold)}
+  .brute button:focus-visible{outline:3px solid rgba(255,204,0,.55);outline-offset:-3px}
+
+  /* ---- 反射／倒序 ---- */
+  .pair{display:grid;gap:16px}
+  @media (min-width:640px){.pair{grid-template-columns:1fr 1fr}}
+  .pair .hint{margin:0 0 10px}
+
+  /* ---- TIPS／頁尾 ---- */
+  .info ul{margin:0;padding-left:1.15rem;color:#c9d6f2;font-size:.92rem;display:grid;gap:6px}
+  footer{max-width:760px;margin:0 auto;padding:6px 16px 44px;color:#7c90bd;font-size:.82rem;text-align:center}
+  footer p{margin:0 0 4px}
+
+  /* ---- Toast ---- */
+  #toast{
+    position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));
+    transform:translate(-50%,12px);background:#0b1024;border:1.5px solid var(--gold);color:#ffe27a;
+    padding:10px 22px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none;
+    transition:opacity .18s,transform .18s;z-index:50;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.45);
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ---- Lookup tools ---- */
+  .minitool{display:grid;gap:6px;padding:12px 0;border-bottom:1px solid rgba(154,178,220,.16)}
+  .minitool:last-child{border-bottom:0;padding-bottom:2px}
+  .minihead{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .minihead .zh-note{font-size:.78rem;color:var(--muted);font-weight:500}
+  .miniin,.keyin{width:100%;min-height:44px;background:var(--field);color:#fff;border:1.5px solid rgba(122,150,205,.42);border-radius:10px;padding:8px 10px;font-family:var(--mono);font-size:1.02rem;letter-spacing:.05em}
+  .miniin:focus,.keyin:focus{border-color:var(--gold);outline:none}
+  .keywrap{display:flex;gap:8px;align-items:center}
+  .keywrap .keylab{font-size:.78rem;color:var(--muted);font-weight:700;white-space:nowrap}
+  .keyin{flex:0 0 120px;text-transform:uppercase}
+  .minirow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .minires{flex:1;min-width:180px;min-height:44px;background:var(--field);border:1.5px solid rgba(255,204,0,.35);border-radius:10px;padding:8px 12px;font-family:var(--mono);font-size:1.05rem;word-break:break-all;color:#fff;margin:0;display:flex;align-items:center}
+  /* ---- 拍照解密（二期・實驗版） ---- */
+  .ptypes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ptype{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-height:64px;padding:12px 14px;border-radius:12px;background:rgba(5,15,43,.6);border:1.5px solid rgba(154,178,220,.45);color:#cfe0ff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;text-align:left}
+  .ptype small{font-weight:500;font-size:.72rem;color:var(--muted)}
+  .ptype[aria-pressed="true"]{background:rgba(255,204,0,.16);border-color:var(--gold);color:#ffe27a}
+  .ptype:focus-visible{outline:3px solid rgba(255,204,0,.55);outline-offset:2px}
+  .goldfile{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 22px;border-radius:12px;background:var(--gold);color:var(--navy);font-weight:900;font-size:1.05rem;cursor:pointer;border:0;font-family:inherit}
+  .goldfile:active{transform:translateY(1px)}
+  #photoCanvas{width:100%;height:auto;display:block;border-radius:12px;border:1.5px solid rgba(154,178,220,.4);margin-top:10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  #photoWrap.semTap #photoCanvas{touch-action:none;cursor:crosshair}
+  .ppanel{margin-top:14px;display:grid;gap:10px}
+  .ptextarea{width:100%;min-height:64px;background:var(--field);color:#fff;border:1.5px solid rgba(122,150,205,.42);border-radius:12px;padding:10px;font-family:var(--mono);font-size:1.05rem;letter-spacing:.05em;resize:vertical}
+  .presult{background:var(--field);border:1.5px solid rgba(255,204,0,.4);border-radius:12px;padding:10px 12px;font-family:var(--mono);font-size:clamp(1.05rem,4vw,1.4rem);word-break:break-all;color:#fff;margin:0}
+  .plabel{font-size:.72rem;letter-spacing:.16em;color:var(--muted);font-weight:800}
+  .pwarn{color:#ffb347;font-size:.85rem;font-weight:700;margin:0}
+  .pconf{font-size:.8rem;color:var(--muted);margin:0}
+  .croprow{display:flex;gap:8px;overflow-x:auto;padding:4px 2px}
+  .cropitem{flex:0 0 auto;border:2px solid transparent;border-radius:10px;padding:3px;background:rgba(5,15,43,.6);cursor:pointer}
+  .cropitem canvas{display:block;width:64px;height:64px;background:#fff;border-radius:6px}
+  .cropitem.active{border-color:var(--gold)}
+  .cropitem .cnum{display:block;text-align:center;font-size:.7rem;color:var(--muted);font-family:var(--mono)}
+  .chartgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+  .chartcell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:8px;background:rgba(5,15,43,.6);border:1px solid rgba(154,178,220,.3);color:#cfe0ff;cursor:pointer;min-height:56px;justify-content:center;font-family:inherit}
+  .chartcell b{font-size:.72rem;color:var(--muted)}
+  .chartcell:active{background:rgba(255,204,0,.2)}
+  .chartcell:focus-visible{outline:3px solid rgba(255,204,0,.55);outline-offset:2px}
+  .chartcell svg,.chartcell canvas{display:block}
+  .candlist{display:grid;gap:8px}
+  .candbtn{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 14px;border-radius:12px;background:rgba(5,15,43,.7);border:1.5px solid rgba(154,178,220,.45);color:#fff;cursor:pointer;font-family:var(--mono);font-size:1.2rem;font-weight:800}
+  .candbtn .cbar{flex:1;height:8px;border-radius:99px;background:rgba(154,178,220,.25);overflow:hidden}
+  .candbtn .cbar i{display:block;height:100%;background:var(--gold)}
+  .candbtn .cpct{font-size:.85rem;color:#ffe27a;min-width:48px;text-align:right;font-family:var(--mono)}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap}
+  /* ---- UI refresh v2.4: clearer hierarchy, responsive workspace, accessible controls ---- */
+  :root{
+    --surface:#0a2350;--surface-raised:#0d2b5e;--surface-inset:#050f2b;
+    --border:rgba(156,181,226,.24);--border-strong:rgba(156,181,226,.42);
+    --muted:#b2c2df;--focus:#ffe27a;
+    --space-1:6px;--space-3:16px;--space-4:24px;
+    --radius-card:20px;--radius-control:12px;
+  }
+  html{scroll-padding-top:86px;scroll-behavior:smooth}
+  body{background-image:radial-gradient(1000px 560px at 50% -180px,rgba(36,99,194,.34),transparent 72%),linear-gradient(180deg,#061a43 0%,var(--navy) 42%)}
+  .skip-link{position:fixed;left:12px;top:10px;z-index:100;transform:translateY(-160%);padding:10px 14px;border-radius:10px;background:var(--gold);color:var(--navy);font-weight:800}
+  .skip-link:focus{transform:translateY(0)}
+  .topbar{max-width:1160px;padding:26px var(--space-4) 18px;gap:16px}
+  .crest{width:52px;height:52px;filter:none}
+  .brand-name{font-size:1.75rem;letter-spacing:.08em}
+  .brand-sub{margin-top:6px;color:#d3def2}
+  .tag-independent{border-color:rgba(255,204,0,.58);background:rgba(255,204,0,.08);padding:4px 11px}
+  .tool-nav{position:sticky;top:0;z-index:20;display:flex;justify-content:center;gap:var(--space-1);max-width:100%;padding:9px 16px;border-block:1px solid rgba(156,181,226,.14);background:rgba(2,19,62,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .tool-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:7px 15px;border:1px solid transparent;border-radius:999px;color:#d9e5fa;text-decoration:none;font-size:.88rem;font-weight:750;white-space:nowrap;transition:background .16s,border-color .16s,color .16s}
+  .tool-nav a:hover,.tool-nav a:focus-visible{border-color:var(--border-strong);background:rgba(255,255,255,.07);color:#fff}
+  main{max-width:1160px;padding:24px var(--space-4) 44px;gap:20px;grid-template-columns:repeat(12,minmax(0,1fr));align-items:start}
+  main>.card:nth-child(1),main>.card:nth-child(4),main>.card:nth-child(5),main>.card:nth-child(6){grid-column:1/-1}
+  main>.card:nth-child(2){grid-column:span 7}
+  main>.pair{grid-column:span 5;display:grid;grid-template-columns:1fr;gap:14px;align-content:start}
+  .card{background:linear-gradient(155deg,var(--surface-raised),var(--card2));border:1px solid var(--border);border-radius:var(--radius-card);padding:22px;box-shadow:0 14px 38px rgba(0,0,0,.2)}
+  .card-label{font-size:.83rem;letter-spacing:.16em;margin-bottom:14px}
+  .card-head{margin-bottom:12px}
+  .hint{line-height:1.55}
+  #cipher{min-height:116px;padding:16px 18px;font-size:1.25rem;border-color:var(--border-strong);border-radius:var(--radius-control);background:var(--surface-inset)}
+  #cipher:focus,.miniin:focus,.keyin:focus,.ptextarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(255,204,0,.12);outline:none}
+  .input-tools{gap:8px;flex-wrap:wrap}
+  .btn{transition:transform .14s,background .14s,border-color .14s}
+  .btn.ghost{border-color:var(--border-strong);color:#e0eaff}
+  .btn.ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,204,0,.55)}
+  .copybtn:hover{background:rgba(255,204,0,.22)}
+  button:focus-visible,input:focus-visible,textarea:focus-visible,.tool-nav a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  .stepper{gap:12px}
+  .btn.step{min-height:80px;background:linear-gradient(180deg,#ffda38,#ffc400);box-shadow:0 4px 0 #b78f00}
+  .btn.step:hover{filter:brightness(1.05)}
+  .nbox{flex-basis:112px}
+  .result{margin-top:18px;padding:16px 18px;border-color:rgba(255,204,0,.52);background:rgba(3,12,34,.68)}
+  .result-text{font-size:clamp(1.4rem,3vw,2rem);line-height:1.55;overflow-wrap:anywhere}
+  .result-text.sm{font-size:clamp(1.1rem,2vw,1.35rem)}
+  .tablewrap{max-height:430px;overflow:auto;overscroll-behavior:contain;border-radius:12px;scrollbar-color:rgba(156,181,226,.5) transparent}
+  .subhead{position:sticky;top:0;z-index:1;margin:0;padding:12px 10px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0}
+  .brute{margin-top:0;border-top:0}
+  .brute button{padding:11px 12px;border-radius:0}
+  .brute button:hover{background:rgba(255,255,255,.055)}
+  .pair .card{height:100%;padding:18px}
+  .pair .result-text{padding:8px 0;overflow-wrap:anywhere}
+  #tableH{margin-bottom:6px}
+  .minitool{padding:var(--space-3);border:1px solid var(--border);border-radius:14px;background:rgba(3,12,34,.25)}
+  .minihead{min-height:28px}
+  .minihead .zh-note{line-height:1.45}
+  .miniin,.keyin,.ptextarea{background:rgba(3,12,34,.74);border-color:var(--border-strong)}
+  .minires{background:rgba(3,12,34,.72);border-color:rgba(255,204,0,.4);min-height:52px}
+  .minirow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}
+  .minirow .minires{grid-column:1/-1;width:100%}
+  .minirow .btn{padding-inline:12px;font-size:.9rem}
+  .keyin{flex-basis:140px}
+  .ptype{background:rgba(3,12,34,.45);border-color:var(--border-strong);transition:background .16s,border-color .16s,transform .16s}
+  .ptype:hover{transform:translateY(-1px);border-color:rgba(255,204,0,.58)}
+  .ptype[aria-pressed="true"]{background:rgba(255,204,0,.15);box-shadow:inset 3px 0 0 var(--gold)}
+  .goldfile{box-shadow:0 4px 0 #b78f00}
+  .goldfile:hover{filter:brightness(1.05)}
+  .info ul{font-size:.95rem;line-height:1.6}
+  footer{max-width:1160px;padding:8px 24px calc(44px + env(safe-area-inset-bottom,0px));line-height:1.65}
+  section[id]{scroll-margin-top:84px}
+  @media (min-width:760px){
+    #tableH{grid-column:1/-1}
+    main>.card:nth-child(4){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  }
+  @media (max-width:900px){
+    main{grid-template-columns:repeat(8,minmax(0,1fr));padding-inline:18px}
+    main>.card:nth-child(2){grid-column:span 5}
+    main>.pair{grid-column:span 3}
+    .card{padding:18px}
+    .tool-nav{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+    .tool-nav::-webkit-scrollbar{display:none}
+  }
+  @media (max-width:680px){
+    html{scroll-padding-top:66px}
+    .topbar{padding:20px 16px 15px;align-items:flex-start}
+    .crest{width:44px;height:44px}
+    .brand-row{gap:7px}
+    .brand-name{font-size:1.45rem}
+    .brand-kicker{font-size:.66rem}
+    .brand-sub{font-size:.82rem;line-height:1.45}
+    .tag-independent{font-size:.62rem;padding:3px 8px}
+    .tool-nav{gap:4px;padding:7px 10px}
+    .tool-nav a{min-height:38px;padding:6px 12px;font-size:.81rem}
+    main{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:16px 14px 32px}
+    main>.card:nth-child(1),main>.card:nth-child(2),main>.pair,main>.card:nth-child(4),main>.card:nth-child(5),main>.card:nth-child(6){grid-column:1}
+    main>.pair{grid-template-columns:1fr;gap:14px}
+    .card{border-radius:17px;padding:17px}
+    #cipher{min-height:104px;font-size:1.1rem}
+    .btn.step{min-height:72px}
+    .nbox{flex-basis:96px}
+    .tablewrap{max-height:380px}
+    .minirow{grid-template-columns:1fr 1fr}
+    .minirow .minires{grid-column:1/-1}
+    .minirow .btn{min-width:0;padding-inline:8px;font-size:.84rem}
+    .minitool{padding:13px}
+    .ptypes{gap:8px}
+    .ptype{padding:11px 10px;font-size:.9rem}
+    .ptype small{font-size:.68rem;line-height:1.4}
+    footer{padding-inline:16px;font-size:.76rem}
+  }
+  @media (max-width:370px){
+    .topbar{gap:10px}.crest{width:38px;height:38px}.brand-name{font-size:1.3rem}
+    .tag-independent{white-space:normal;line-height:1.2}
+    .stepper{gap:7px}.nbox{flex-basis:82px}.btn.step{font-size:1.4rem}
+    .ptypes{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#cipher">Skip to ciphertext input</a>
+
+<header class="topbar">
+  <svg class="crest" viewBox="0 0 24 24" width="46" height="46" aria-hidden="true" focusable="false">
+    <path d="M12 1.6l8.6 3.2v6.2c0 5.4-3.7 9.4-8.6 11.9C7.1 20.4 3.4 16.4 3.4 11V4.8L12 1.6z" fill="#ffcc00"/>
+    <path d="M12 3.9l6.6 2.4v4.8c0 4.3-2.9 7.6-6.6 9.7-3.7-2.1-6.6-5.4-6.6-9.7V6.3L12 3.9z" fill="#06255c"/>
+    <text x="12" y="15.8" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="9.5" font-weight="700" fill="#ffcc00">D</text>
+  </svg>
+  <div class="brandline">
+    <div class="brand-row">
+      <span class="brand-kicker">SCOUT</span>
+      <span class="brand-name">DECODE</span>
+      <span class="tag-independent">Decode only · Works offline</span>
+    </div>
+    <p class="brand-sub">Decode ciphers on the spot. For encryption, use the CODE app.</p>
+  </div>
+  <a class="language-link" href="index.html" lang="zh-Hant" hreflang="zh-Hant">繁體中文</a>
+</header>
+<nav class="tool-nav" aria-label="Jump to decoding tools">
+  <a href="#inputSection">✍️ Ciphertext</a>
+  <a href="#caesarSection">↔ Caesar table</a>
+  <a href="#lookupSection">⌕ Lookup tools</a>
+  <a href="#photoSection">▧ Photo recognition</a>
+</nav>
+
+<main>
+
+  <!-- 輸入 -->
+  <section id="inputSection" class="card" aria-labelledby="inputH">
+    <h2 class="card-label" id="inputH">Enter the text you see</h2>
+    <label class="sr-only" for="cipher">Ciphertext: automatically uppercased, up to 200 characters; numbers and spaces are preserved.</label>
+    <textarea id="cipher" maxlength="200" rows="3" spellcheck="false" autocapitalize="characters" autocomplete="off" aria-describedby="cipherMeta" placeholder="Example: KHOOR ZRUOG"></textarea>
+    <div class="input-tools">
+      <button type="button" id="btnExample" class="btn ghost">Load example</button>
+      <button type="button" id="btnClear" class="btn ghost">Clear main decoder</button>
+      <span id="count" class="count">0/200</span>
+    </div>
+    <p id="cipherMeta" class="privacy-note">🔒 The main draft is saved only on this device. Clear resets it and the shift, not the other tools.</p>
+  </section>
+
+  <!-- 凱撒 -->
+  <section id="caesarSection" class="card" aria-labelledby="caesarH">
+    <div class="card-head">
+      <h2 class="card-label" id="caesarH">CAESAR DECODE</h2>
+      <button type="button" id="copyMain" class="copybtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        Copy
+      </button>
+    </div>
+    <p id="modeHint" class="hint">Decode: plaintext = ciphertext − N, shifting each letter back N places.</p>
+
+    <div class="stepper">
+      <button type="button" id="nMinus" class="btn step" aria-label="Decrease shift by 1">−1</button>
+      <div class="nbox">
+        <label class="nlabel" for="nInput">Shift N</label>
+        <input id="nInput" type="number" min="0" max="25" step="1" inputmode="numeric" value="0">
+      </div>
+      <button type="button" id="nPlus" class="btn step" aria-label="Increase shift by 1">＋1</button>
+    </div>
+
+    <div class="result">
+      <p class="result-label" id="mainLabel">Decoded result (ciphertext − N)</p>
+      <p class="result-text mono" id="mainResult">—</p>
+    </div>
+    <div id="live" class="sr-only" role="status" aria-live="polite"></div>
+
+    <div id="tableWrap" class="tablewrap" hidden>
+      <h3 class="subhead">All shifts 0–25 · Select a row to use its shift</h3>
+      <ol id="brute" class="brute"></ol>
+    </div>
+    <p id="tableEmpty" class="hint">Enter text to see all 26 shifts. Look for the result that makes sense.</p>
+  </section>
+
+  <!-- 反射／倒序 -->
+  <div class="pair">
+    <section class="card" aria-labelledby="atbashH">
+      <div class="card-head">
+        <h2 class="card-label" id="atbashH">ATBASH</h2>
+        <button type="button" id="copyAtbash" class="copybtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          Copy
+        </button>
+      </div>
+      <p class="hint">A↔Z, B↔Y… fixed substitution, no shift.</p>
+      <p class="result-text mono sm" id="atbashOut">—</p>
+    </section>
+
+    <section class="card" aria-labelledby="revH">
+      <div class="card-head">
+        <h2 class="card-label" id="revH">REVERSE</h2>
+        <button type="button" id="copyRev" class="copybtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          Copy
+        </button>
+      </div>
+      <p class="hint">Reverse the entire text, including spaces.</p>
+      <p class="result-text mono sm" id="revOut">—</p>
+    </section>
+  </div>
+
+  <!-- Lookup tools -->
+  <section id="lookupSection" class="card" aria-labelledby="tableH">
+    <h2 class="card-label" id="tableH">LOOKUP TOOLS · MORSE / PHONE / GRID / NATO</h2>
+
+    <div class="minitool">
+      <div class="minihead"><span class="plabel">MORSE</span><span class="zh-note">. for dot, - for dash; separate letters with spaces and words with /. Example: ... --- ...</span></div>
+      <input id="morseIn" class="miniin" type="text" spellcheck="false" autocomplete="off" placeholder="... --- ..." aria-label="Morse input">
+      <div class="minirow">
+        <p class="minires" id="morseOut">—</p>
+        <button type="button" class="btn ghost" id="morseCopy">Copy</button>
+        <button type="button" class="btn ghost" id="morseSend">⬆ Main decoder</button>
+      </div>
+    </div>
+
+    <div class="minitool">
+      <div class="minihead"><span class="plabel">PHONE T9</span><span class="zh-note">Each pair is the key and press number (2–4 presses); / separates words. Example: 22 43 33</span></div>
+      <input id="phoneIn" class="miniin" type="text" spellcheck="false" autocomplete="off" inputmode="numeric" placeholder="22 43 33" aria-label="Phone keypad input">
+      <div class="minirow">
+        <p class="minires" id="phoneOut">—</p>
+        <button type="button" class="btn ghost" id="phoneCopy">Copy</button>
+        <button type="button" class="btn ghost" id="phoneSend">⬆ Main decoder</button>
+      </div>
+    </div>
+
+    <div class="minitool">
+      <div class="minihead"><span class="plabel">GRID</span><span class="zh-note">Pairs represent column and row using the key; I and J share a cell. Example (KEY=SCOUT): SS CS = AB</span></div>
+      <div class="keywrap">
+        <label class="keylab" for="gridKey">KEY</label>
+        <input id="gridKey" class="keyin" type="text" value="SCOUT" maxlength="5" spellcheck="false" autocomplete="off" aria-label="Grid key, default SCOUT">
+      </div>
+      <input id="gridIn" class="miniin" type="text" spellcheck="false" autocomplete="off" placeholder="SS CS" aria-label="Grid input">
+      <div class="minirow">
+        <p class="minires" id="gridOut">—</p>
+        <button type="button" class="btn ghost" id="gridCopy">Copy</button>
+        <button type="button" class="btn ghost" id="gridSend">⬆ Main decoder</button>
+      </div>
+    </div>
+
+    <div class="minitool">
+      <div class="minihead"><span class="plabel">NATO PHONETIC</span><span class="zh-note">Alfa Bravo Charlie… Unrecognized words are preserved. Example: ALPHA BRAVO CHARLIE</span></div>
+      <input id="natoIn" class="miniin" type="text" spellcheck="false" autocomplete="off" placeholder="ALPHA BRAVO CHARLIE" aria-label="NATO words input">
+      <div class="minirow">
+        <p class="minires" id="natoOut">—</p>
+        <button type="button" class="btn ghost" id="natoCopy">Copy</button>
+        <button type="button" class="btn ghost" id="natoSend">⬆ Main decoder</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 拍照解密（二期・實驗版） -->
+  <section id="photoSection" class="card" aria-labelledby="photoH">
+    <div class="card-head">
+      <h2 class="card-label" id="photoH">PHOTO DECODING · EXPERIMENTAL</h2>
+    </div>
+    <p class="hint">First choose a cipher type. Close, well-lit photos of printed material work best. Recognition runs on your device; photos are not uploaded.</p>
+    <div class="ptypes">
+      <button type="button" class="ptype" data-ptype="morse" aria-pressed="false">📟 Paper Morse<small>Automatically recognizes . − / (handwriting may work)</small></button>
+      <button type="button" class="ptype" data-ptype="braille" aria-pressed="false">⠿ Printed Braille<small>Automatically recognizes six-dot cells</small></button>
+      <button type="button" class="ptype" data-ptype="pigpen" aria-pressed="false">🔐 Pigpen<small>Segments symbols for manual matching</small></button>
+      <button type="button" class="ptype" data-ptype="sem" aria-pressed="false">🚩 Semaphore figure<small>Tap three points on the photo</small></button>
+      <button type="button" class="ptype" data-ptype="ocr" aria-pressed="false">🅰 Printed English OCR<small>Reads text (internet required to load engine)</small></button>
+    </div>
+    <div id="photoRun" hidden>
+      <label class="goldfile" for="photoFile">📷 Take or choose a photo</label>
+      <input type="file" id="photoFile" accept="image/*" capture="environment" hidden>
+      <div id="photoWrap" hidden>
+        <canvas id="photoCanvas"></canvas>
+        <p id="semTapHint" class="hint" hidden>Tap three points: ① one flag ② the other flag ③ the body centre. Flag order does not matter. Use Reset points if needed.</p>
+      </div>
+      <p id="photoMsg" class="hint"></p>
+
+      <div id="panelMorse" class="ppanel" hidden>
+        <span class="plabel">Recognized Morse (edit to decode again)</span>
+        <textarea id="morseRaw" class="ptextarea" spellcheck="false" placeholder="... --- ..."></textarea>
+        <span class="plabel">Decoded result</span>
+        <p class="presult" id="morseText">—</p>
+        <p class="pconf" id="morseConf"></p>
+        <p class="pwarn" id="morseWarn"></p>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="morseUse">⬇ Send text to main decoder</button>
+        </div>
+      </div>
+
+      <div id="panelBraille" class="ppanel" hidden>
+        <span class="plabel">Recognized Braille (editable)</span>
+        <textarea id="brailleText" class="ptextarea" spellcheck="false"></textarea>
+        <p class="pconf" id="brailleConf"></p>
+        <p class="pwarn" id="brailleWarn"></p>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="brailleUse">⬇ Send text to main decoder</button>
+        </div>
+      </div>
+
+      <div id="panelPigpen" class="ppanel" hidden>
+        <span class="plabel">Match symbols from left to right using the chart. Segmentation is an aid, not automatic recognition.</span>
+        <div id="pigpenCrops" class="croprow"></div>
+        <div id="pigpenChart" class="chartgrid"></div>
+        <span class="plabel">Result (editable)</span>
+        <textarea id="pigpenText" class="ptextarea" spellcheck="false"></textarea>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="pigpenUndo">⬅ Undo last</button>
+          <button type="button" class="btn ghost" id="pigpenUse">⬇ Send text to main decoder</button>
+        </div>
+      </div>
+
+      <div id="panelSem" class="ppanel" hidden>
+        <span class="plabel">After tapping three points, choose a candidate (highest score first):</span>
+        <div id="semCands" class="candlist"></div>
+        <span class="plabel">Text (add letters using the chart or edit below)</span>
+        <textarea id="semText" class="ptextarea" spellcheck="false"></textarea>
+        <div id="semChart" class="chartgrid"></div>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="semResetTaps">Reset points</button>
+          <button type="button" class="btn ghost" id="semUse">⬇ Send text to main decoder</button>
+        </div>
+      </div>
+
+      <div id="panelOcr" class="ppanel" hidden>
+        <span class="plabel">Printed English OCR requires internet to load the engine and language data; caching depends on the browser.</span>
+        <p class="pconf" id="ocrStatus"></p>
+        <span class="plabel">Recognized text (editable)</span>
+        <textarea id="ocrText" class="ptextarea" spellcheck="false"></textarea>
+        <p class="pconf" id="ocrConf"></p>
+        <div class="btnrow">
+          <button type="button" class="btn ghost" id="ocrUse">⬇ Send text to main decoder</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIPS -->
+  <section class="card info" aria-labelledby="tipsH">
+    <h2 class="card-label" id="tipsH">TIPS</h2>
+    <ul>
+      <li>This app is <b>for decoding only</b>; for encryption, use Scout System CODE.</li>
+      <li>Caesar shifts A–Z only; numbers, spaces and punctuation are preserved.</li>
+      <li>Decode = ciphertext − N, shifting letters <b>backwards</b> (F→A for N=5). All 26 shifts are shown.</li>
+      <li>Unsure of the shift? Check the 0–25 table for a meaningful result.</li>
+      <li>Photo recognition is experimental. Morse and Braille are automatic; Pigpen and Semaphore need manual matching. Always check results. OCR needs internet to load; other tools work offline.</li>
+      <li>The draft and last shift are saved locally. Clear main decoder removes the draft and resets the shift.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <p>Scout Decode v2.5 · A local, client-side tool: no login or backend. Input stays on your device.</p>
+  <p>© 2026 Scout System · All rights reserved. DECODE is a separate app from CODE. Use CODE for encryption.</p>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<noscript><p style="max-width:760px;margin:16px auto;padding:0 16px;color:#ffd83d;font-weight:700">Enable JavaScript to use the decoder.</p></noscript>
+
+<script>
+/* CORE-BEGIN */
+(function (global) {
+  'use strict';
+  function normalizeUpper(s) { return String(s == null ? '' : s).toUpperCase(); }
+  /* 只動 A–Z；n 可為任何整數，mod 26 包裹 */
+  function shiftLetter(ch, n) {
+    var x = (((ch.charCodeAt(0) - 65 + n) % 26) + 26) % 26;
+    return String.fromCharCode(x + 65);
+  }
+  /* 凱撒還原（DECODE for decoding only）：明文 = 密文 − n（等價於 + (26−n)）。
+     與 CODE App 對齊：CODE 編碼 = +N，所以呢邊用 −N 還原。 */
+  function caesar(text, n) {
+    var t = normalizeUpper(text);
+    var d = -(Number(n) || 0);
+    var out = '';
+    for (var i = 0; i < t.length; i++) {
+      var c = t.charAt(i);
+      if (c >= 'A' && c <= 'Z') { out += shiftLetter(c, d); } else { out += c; }
+    }
+    return out;
+  }
+  /* 反射 Atbash：A↔Z、B↔Y……固定一組，無Shift */
+  function atbash(text) {
+    var t = normalizeUpper(text);
+    var out = '';
+    for (var i = 0; i < t.length; i++) {
+      var c = t.charAt(i);
+      if (c >= 'A' && c <= 'Z') { out += String.fromCharCode(65 + 25 - (c.charCodeAt(0) - 65)); } else { out += c; }
+    }
+    return out;
+  }
+  /* 倒序：整段字元反轉（含empty），轉大寫 */
+  function reverseText(text) {
+    return Array.from(normalizeUpper(text)).reverse().join('');
+  }
+  global.ScoutDecodeCore = { normalizeUpper: normalizeUpper, shiftLetter: shiftLetter, caesar: caesar, atbash: atbash, reverseText: reverseText };
+})(this);
+/* CORE-END */
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var core = window.ScoutDecodeCore;
+  function $(id) { return document.getElementById(id); }
+
+  var input = $('cipher'), count = $('count'), btnClear = $('btnClear'), btnExample = $('btnExample');
+  var modeHint = $('modeHint');
+  var nMinus = $('nMinus'), nPlus = $('nPlus'), nInput = $('nInput');
+  var mainLabel = $('mainLabel'), mainResult = $('mainResult'), live = $('live');
+  var tableWrap = $('tableWrap'), brute = $('brute'), tableEmpty = $('tableEmpty');
+  var atbashOut = $('atbashOut'), revOut = $('revOut');
+  var toastEl = $('toast');
+
+  var EXAMPLE = 'KHOOR ZRUOG VFRXW'; /* −3 → HELLO WORLD SCOUT */
+  var KEYS = { draft: 'scoutDecode.draft', n: 'scoutDecode.n' };
+  /* localStorage 可能喺沙盒／私隱模式下被擋：全部包 try-catch，擋咗就當無記憶 */
+  var store = {
+    get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { } },
+    del: function (k) { try { window.localStorage.removeItem(k); } catch (e) { } }
+  };
+  var reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  var n = 0, toastTimer = null, rows = [];
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1600);
+  }
+  function clampN(v) {
+    var x = parseInt(v, 10);
+    if (isNaN(x)) { x = 0; }
+    return ((x % 26) + 26) % 26;
+  }
+  function save() {
+    store.set(KEYS.draft, input.value);
+    store.set(KEYS.n, String(n));
+  }
+  function examplePair() {
+    return core.shiftLetter('A', n) + '→A, ' + core.shiftLetter('B', n) + '→B';
+  }
+
+  function render() {
+    var t = core.normalizeUpper(input.value).slice(0, 200);
+    var has = t.length > 0;
+
+    mainResult.textContent = has ? core.caesar(t, n) : '—';
+    modeHint.textContent = 'Decode: plaintext = ciphertext − ' + n + ', shifting each letter back ' + n + ' places (' + examplePair() + ')';
+
+    tableWrap.hidden = !has;
+    tableEmpty.hidden = has;
+    if (has) {
+      for (var i = 0; i < 26; i++) {
+        rows[i].text.textContent = core.caesar(t, i);
+        if (i === n) { rows[i].btn.setAttribute('aria-current', 'true'); }
+        else { rows[i].btn.removeAttribute('aria-current'); }
+      }
+    }
+
+    atbashOut.textContent = has ? core.atbash(t) : '—';
+    revOut.textContent = has ? core.reverseText(t) : '—';
+    count.textContent = input.value.length + '/200';
+  }
+
+  function announce() {
+    live.textContent = 'Shift ' + n + ', decoded result: ' +
+      (mainResult.textContent === '—' ? 'empty' : mainResult.textContent);
+  }
+
+  function setN(v) {
+    n = clampN(v);
+    nInput.value = String(n);
+    render();
+    save();
+    announce();
+  }
+  function scrollToMain() {
+    mainResult.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+  }
+
+  /* 建 0–25 全表（26 行，每行一個按鈕） */
+  for (var i = 0; i < 26; i++) {
+    (function (idx) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-n', String(idx));
+      b.setAttribute('aria-label', 'Set shift to ' + idx);
+      var num = document.createElement('span');
+      num.className = 'bnum';
+      num.textContent = 'N=' + idx;
+      var txt = document.createElement('span');
+      txt.className = 'btext';
+      b.appendChild(num);
+      b.appendChild(txt);
+      b.addEventListener('click', function () { setN(idx); scrollToMain(); });
+      li.appendChild(b);
+      brute.appendChild(li);
+      rows.push({ btn: b, text: txt });
+    })(i);
+  }
+
+  /* 輸入：自動轉大寫（保留游標位置）＋ 即時更新三張卡 */
+  input.addEventListener('input', function () {
+    var s, e;
+    try { s = this.selectionStart; e = this.selectionEnd; } catch (err) { }
+    this.value = core.normalizeUpper(this.value).slice(0, 200);
+    try { this.setSelectionRange(s, e); } catch (err) { }
+    render();
+    save();
+  });
+
+  nMinus.addEventListener('click', function () { setN(n - 1); });
+  nPlus.addEventListener('click', function () { setN(n + 1); });
+  /* 打字途中只更新 N，唔蓋咗輸入值（例如 99→23 唔會即時蓋去手入面）；blur/change 先正規化顯示 */
+  nInput.addEventListener('input', function () {
+    if (this.value !== '') { n = clampN(this.value); render(); save(); announce(); }
+  });
+  nInput.addEventListener('change', function () { setN(this.value); });
+
+  btnClear.addEventListener('click', function () {
+    input.value = '';
+    n = 0;
+    nInput.value = '0';
+    store.del(KEYS.draft);
+    store.del(KEYS.n);
+    render();
+    announce();
+    input.focus();
+    toast('Ciphertext and saved draft cleared');
+  });
+  btnExample.addEventListener('click', function () {
+    input.value = EXAMPLE;
+    setN(3); /* 範例密文直接展示 KHOOR → HELLO 的解碼方向 */
+    input.focus();
+    toast('Example loaded: shift 3');
+  });
+
+  /* Copy：Clipboard API → execCommand 後備 → 選取文字等人手抄 */
+  function selectEl(el) {
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(el);
+      var s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    } catch (e) { }
+  }
+  function copyWithFallback(str, el) {
+    function legacy() {
+      var ok = false;
+      var ta = document.createElement('textarea');
+      ta.value = str;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { ta.setSelectionRange(0, str.length); } catch (e) { }
+      try { ok = document.execCommand('copy'); } catch (e) { }
+      document.body.removeChild(ta);
+      if (ok) { toast('Copied'); }
+      else { selectEl(el); toast('Result selected; copy it manually'); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(str).then(function () { toast('Copied'); }, legacy);
+    } else { legacy(); }
+  }
+  function bindCopy(btnId, el, getStr) {
+    $(btnId).addEventListener('click', function () {
+      var s = getStr();
+      if (!s) { toast('Nothing to copy'); return; }
+      copyWithFallback(s, el);
+    });
+  }
+  bindCopy('copyMain', mainResult, function () { return mainResult.textContent === '—' ? '' : mainResult.textContent; });
+  bindCopy('copyAtbash', atbashOut, function () { return atbashOut.textContent === '—' ? '' : atbashOut.textContent; });
+  bindCopy('copyRev', revOut, function () { return revOut.textContent === '—' ? '' : revOut.textContent; });
+
+  /* 起始：還原本機草稿與上次 N */
+  var d = store.get(KEYS.draft);
+  if (d) { input.value = String(d).slice(0, 200); }
+  var sn = store.get(KEYS.n);
+  if (sn !== null) { n = clampN(sn); }
+  nInput.value = String(n);
+  render();
+
+  /* 給拍照模組用嘅接口 */
+  window.ScoutDecodeUI = {
+    setInput: function (s) {
+      input.value = core.normalizeUpper(s).slice(0, 200);
+      input.dispatchEvent(new Event('input'));
+    },
+    toast: toast,
+    copy: function (s) {
+      if (!s) { toast('Nothing to copy'); return; }
+      copyWithFallback(s, mainResult);
+    },
+    scrollToMain: function () {
+      mainResult.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    }
+  };
+})();
+</script>
+<script>
+/* CV-CORE-BEGIN */
+(function (global) {
+'use strict';
+
+/* ==================== 基礎影像處理（純函數，可測試） ==================== */
+function otsuThreshold(gray) {
+  var hist = new Uint32Array(256), i, total = gray.length, sum = 0;
+  for (i = 0; i < total; i++) { hist[gray[i]]++; sum += gray[i] * 1; }
+  var sumB = 0, wB = 0, maxVar = -1, thrMin = -1, thrMax = -1;
+  for (i = 0; i < 256; i++) {
+    wB += hist[i];
+    if (wB === 0) { continue; }
+    var wF = total - wB;
+    if (wF === 0) { break; }
+    sumB += i * hist[i];
+    var mB = sumB / wB, mF = (sum - sumB) / wF;
+    var v = wB * wF * (mB - mF) * (mB - mF);
+    if (v > maxVar) { maxVar = v; thrMin = i; thrMax = i; }
+    else if (v === maxVar) { thrMax = i; }
+  }
+  /* 取最大變異區間嘅中點：墨值本身唔會被當成門檻 */
+  return thrMin < 0 ? 127 : Math.round((thrMin + thrMax) / 2);
+}
+/* 回傳 true = 墨係淺色（深底淺字），要反轉 */
+function isInkLight(gray, thr) {
+  var dark = 0;
+  for (var i = 0; i < gray.length; i++) { if (gray[i] < thr) { dark++; } }
+  return dark > gray.length / 2;
+}
+function binarize(gray, thr, inkIsLight) {
+  var b = new Uint8Array(gray.length);
+  for (var i = 0; i < gray.length; i++) {
+    b[i] = (inkIsLight ? gray[i] >= thr : gray[i] < thr) ? 1 : 0;
+  }
+  return b;
+}
+/* 8-連通元件（標記 + 外框 + 面積） */
+function connectedComponents(bin, w, h) {
+  var labels = new Int32Array(w * h);
+  var comps = [];
+  var stack = new Int32Array(w * h);
+  var next = 1, i;
+  for (i = 0; i < w * h; i++) {
+    if (!bin[i] || labels[i]) { continue; }
+    var id = next++, sp = 0;
+    stack[sp++] = i; labels[i] = id;
+    var x0 = w, y0 = h, x1 = 0, y1 = 0, area = 0;
+    while (sp) {
+      var p = stack[--sp], px = p % w, py = (p - px) / w;
+      area++;
+      if (px < x0) { x0 = px; } if (px > x1) { x1 = px; }
+      if (py < y0) { y0 = py; } if (py > y1) { y1 = py; }
+      for (var dy = -1; dy <= 1; dy++) {
+        for (var dx = -1; dx <= 1; dx++) {
+          if (!dx && !dy) { continue; }
+          var nx = px + dx, ny = py + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) { continue; }
+          var q = ny * w + nx;
+          if (bin[q] && !labels[q]) { labels[q] = id; stack[sp++] = q; }
+        }
+      }
+    }
+    comps.push({ x0: x0, y0: y0, x1: x1, y1: y1, area: area });
+  }
+  return comps;
+}
+function median(arr) {
+  if (!arr.length) { return 0; }
+  var s = arr.slice().sort(function (a, b) { return a - b; });
+  return s[Math.floor(s.length / 2)];
+}
+
+/* ==================== 摩斯 ==================== */
+var MORSE_TABLE = { 'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','0':'-----' };
+var MORSE_REVERSE = (function () {
+  var r = {};
+  for (var k in MORSE_TABLE) { r[MORSE_TABLE[k]] = k; }
+  return r;
+})();
+/* raw 格式：元素之間冇嘢、字母之間空格、詞之間 '/' */
+function decodeMorseRaw(raw) {
+  var out = '', words = String(raw || '').split('/');
+  for (var w = 0; w < words.length; w++) {
+    var letters = words[w].trim().split(/\s+/).filter(Boolean);
+    for (var i = 0; i < letters.length; i++) {
+      out += MORSE_REVERSE[letters[i]] || '?';
+    }
+    if (w < words.length - 1) { out += ' '; }
+  }
+  return out.trim();
+}
+/* 自動辨識Paper Morse：Otsu 二值化 → 主行 → 欄投影切元件 → 點/橫 → 間距分字母/詞 */
+function recognizeMorse(gray, w, h) {
+  var warnings = [];
+  var empty = { raw: '', text: '', elements: [], warnings: warnings };
+  var thr = otsuThreshold(gray);
+  var inkIsLight = isInkLight(gray, thr);
+  var bin = binarize(gray, thr, inkIsLight);
+  var x, y, i;
+  /* 主行（包住最多墨嘅連續橫帶） */
+  var rowSum = new Uint32Array(h), maxRow = 0, peakY = 0;
+  for (y = 0; y < h; y++) {
+    var s = 0;
+    for (x = 0; x < w; x++) { s += bin[y * w + x]; }
+    rowSum[y] = s;
+    if (s > maxRow) { maxRow = s; peakY = y; }
+  }
+  if (!maxRow) { warnings.push('No marks found. Try a closer or brighter photo.'); return empty; }
+  var pass = maxRow * 0.04;
+  var y0 = peakY, y1 = peakY;
+  while (y0 > 0 && rowSum[y0 - 1] > pass) { y0--; }
+  while (y1 < h - 1 && rowSum[y1 + 1] > pass) { y1++; }
+  /* 欄投影 → 元件 */
+  var colSum = new Uint32Array(w);
+  for (y = y0; y <= y1; y++) {
+    for (x = 0; x < w; x++) { if (bin[y * w + x]) { colSum[x]++; } }
+  }
+  var els = [];
+  x = 0;
+  while (x < w) {
+    if (colSum[x] > 0) {
+      var xs = x;
+      while (x < w && colSum[x] > 0) { x++; }
+      if (x - xs >= 2) { els.push({ x0: xs, x1: x - 1 }); }
+    } else { x++; }
+  }
+  if (!els.length) { warnings.push('No symbols found'); return empty; }
+  for (i = 0; i < els.length; i++) {
+    var e = els[i], ymin = y1, ymax = y0;
+    for (y = y0; y <= y1; y++) {
+      for (x = e.x0; x <= e.x1; x++) {
+        if (bin[y * w + x]) { if (y < ymin) { ymin = y; } if (y > ymax) { ymax = y; } }
+      }
+    }
+    e.wd = e.x1 - e.x0 + 1;
+    e.ht = ymax - ymin + 1;
+    var aspect = e.wd / e.ht;
+    if (aspect >= 1.6) {
+      e.ch = '-';
+      e.conf = Math.min(1, 0.6 + (aspect - 1.6) / 4);
+    } else {
+      e.ch = '.';
+      e.conf = Math.max(0.3, 1 - Math.abs(aspect - 1) / 1.6);
+    }
+  }
+  var widths = els.map(function (e) { return e.wd; });
+  var mw = median(widths);
+  var gaps = [];
+  for (i = 1; i < els.length; i++) { gaps.push(els[i].x0 - els[i - 1].x1 - 1); }
+  var mg = median(gaps);
+  var dit = gaps.length ? Math.min(mw, 1.2 * mg) : mw;
+  var letterBreak = 2.0 * dit;   /* 標準：字母間 ≈ 3 dit */
+  var wordBreak = 5.0 * dit;     /* 標準：詞間 ≈ 7 dit，保守取 5 */
+  /* 組 raw */
+  var raw = '';
+  for (i = 0; i < els.length; i++) {
+    raw += els[i].ch;
+    if (i < els.length - 1) {
+      var g = els[i + 1].x0 - els[i].x1 - 1;
+      if (g >= wordBreak) { raw += ' / '; }
+      else if (g >= letterBreak) { raw += ' '; }
+    }
+  }
+  var confSum = 0;
+  for (i = 0; i < els.length; i++) { confSum += els[i].conf; }
+  var text = decodeMorseRaw(raw);
+  if (text.indexOf('?') !== -1) { warnings.push('Some letters could not be decoded (?). Check spacing and edit the raw Morse.'); }
+  return { raw: raw, text: text, elements: els, warnings: warnings, conf: els.length ? confSum / els.length : 0 };
+}
+
+/* ==================== Printed Braille ==================== */
+var BRAILLE_MAP = { 'A':[1],'B':[1,2],'C':[1,4],'D':[1,4,5],'E':[1,5],'F':[1,2,4],'G':[1,2,4,5],'H':[1,2,5],'I':[2,4],'J':[2,4,5],'K':[1,3],'L':[1,2,3],'M':[1,3,4],'N':[1,3,4,5],'O':[1,3,5],'P':[1,2,3,4],'Q':[1,2,3,4,5],'R':[1,2,3,5],'S':[2,3,4],'T':[2,3,4,5],'U':[1,3,6],'V':[1,2,3,6],'W':[2,4,5,6],'X':[1,3,4,6],'Y':[1,3,4,5,6],'Z':[1,3,5,6] };
+var BRAILLE_BY_BITS = (function () {
+  var r = {};
+  for (var k in BRAILLE_MAP) { r[BRAILLE_MAP[k].slice().sort(function (a, b) { return a - b; }).join(',')] = k; }
+  return r;
+})();
+/* 自動辨識Printed Braille：Otsu → 連通元件（圓點）→ 細胞聚類 → 六點位 → 字母 */
+function recognizeBraille(gray, w, h) {
+  var warnings = [];
+  var thr = otsuThreshold(gray);
+  var inkIsLight = isInkLight(gray, thr);
+  var bin = binarize(gray, thr, inkIsLight);
+  var comps = connectedComponents(bin, w, h).filter(function (c) {
+    return c.area >= 6 && (c.x1 - c.x0 + 1) <= w * 0.9 && (c.y1 - c.y0 + 1) <= h * 0.9;
+  });
+  if (!comps.length) { return { text: '', cells: [], warnings: ['No dots found. Try a closer or brighter photo.'] }; }
+  var mA = median(comps.map(function (c) { return c.area; }));
+  var dots = comps.filter(function (c) { return c.area >= mA * 0.25 && c.area <= mA * 4; });
+  if (!dots.length) { return { text: '', cells: [], warnings: ['Dot sizes vary too much to recognize.'] }; }
+  var dotD = median(dots.map(function (c) { return (c.x1 - c.x0 + 1 + c.y1 - c.y0 + 1) / 2; }));
+  var centers = dots.map(function (c) {
+    return { x: (c.x0 + c.x1) / 2, y: (c.y0 + c.y1) / 2 };
+  });
+  centers.sort(function (a, b) { return a.x - b.x || a.y - b.y; });
+  /* 貪心聚細胞：同一細胞 = 橫向差距 < 3×dotD 且縱向差距 < 4×dotD */
+  var cells = [];
+  for (var i = 0; i < centers.length; i++) {
+    var d = centers[i], target = null;
+    for (var j = cells.length - 1; j >= 0 && !target; j--) {
+      var cell = cells[j];
+      for (var k = 0; k < cell.dots.length; k++) {
+        var od = cell.dots[k];
+        if (Math.abs(d.x - od.x) < 3 * dotD && Math.abs(d.y - od.y) < 4 * dotD) { target = cell; break; }
+      }
+    }
+    if (target) { target.dots.push(d); }
+    else { cells.push({ dots: [d] }); }
+  }
+  /* 細胞 → 六點位 → 字母 */
+  var out = [], confSum = 0;
+  for (i = 0; i < cells.length; i++) {
+    var c = cells[i], conf = 1;
+    var xs = c.dots.map(function (p) { return p.x; });
+    var ys = c.dots.map(function (p) { return p.y; });
+    var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+    var minY = Math.min.apply(null, ys);
+    var spread = maxX - minX;
+    var twoCol = spread > 0.9 * dotD;
+    if (!twoCol && spread > 0.4 * dotD) { conf *= 0.6; }
+    var bits = [], seen = {};
+    for (var m = 0; m < c.dots.length; m++) {
+      var p = c.dots[m];
+      var col = twoCol && (p.x > (minX + maxX) / 2) ? 1 : 0;
+      var rowF = (p.y - minY) / (1.7 * dotD);
+      var row = Math.round(rowF);
+      if (row < 0) { row = 0; } if (row > 2) { row = 2; }
+      if (Math.abs(rowF - row) > 0.5) { conf *= 0.7; }
+      var bit = col * 3 + row + 1;
+      if (seen[bit]) { conf *= 0.5; } else { seen[bit] = 1; bits.push(bit); }
+    }
+    bits.sort(function (a, b) { return a - b; });
+    var ch = '?';
+    if (bits.length >= 1 && bits.length <= 5) { ch = BRAILLE_BY_BITS[bits.join(',')] || '?'; }
+    if (bits.length > 5) { conf *= 0.3; warnings.push('A cell has more than five dots; another line may have been included.'); }
+    if (ch === '?') { conf *= 0.3; }
+    c.ch = ch; c.conf = conf; c.x = minX; c.y = minY;
+    out.push(c);
+  }
+  /* 分行（上→下），行內（左→右） */
+  out.sort(function (a, b) { return a.y - b.y || a.x - b.x; });
+  var lines = [], cur = null;
+  for (i = 0; i < out.length; i++) {
+    if (!cur || out[i].y - cur.top > 4 * dotD) { cur = { top: out[i].y, cells: [] }; lines.push(cur); }
+    cur.cells.push(out[i]);
+  }
+  var text = lines.map(function (ln) {
+    return ln.cells.sort(function (a, b) { return a.x - b.x; }).map(function (c) { return c.ch; }).join('');
+  }).join(' ');
+  for (i = 0; i < out.length; i++) { confSum += out[i].conf; }
+  if (text.indexOf('?') !== -1) { warnings.push('Some cells could not be decoded (?). You can edit the result.'); }
+  return { text: text, cells: out, warnings: warnings, conf: out.length ? confSum / out.length : 0 };
+}
+
+/* ==================== Pigpen：自動切符號（輔助用） ==================== */
+/* Pigpen符號多筆畫／有點：先連通元件，再合併相近外框成完整符號 */
+function findSymbols(gray, w, h) {
+  var thr = otsuThreshold(gray);
+  var inkIsLight = isInkLight(gray, thr);
+  var bin = binarize(gray, thr, inkIsLight);
+  var comps = connectedComponents(bin, w, h).filter(function (c) {
+    return c.area >= 8;
+  });
+  if (!comps.length) { return []; }
+  var mA = median(comps.map(function (c) { return c.area; }));
+  comps = comps.filter(function (c) { return c.area >= mA * 0.06 && c.area <= mA * 60; });
+  var boxes = comps.map(function (c) {
+    return { x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1 };
+  });
+  /* 合併相近外框（筆畫／點歸組） */
+  var medSize = median(boxes.map(function (b) { return Math.max(b.x1 - b.x0 + 1, b.y1 - b.y0 + 1); }));
+  var gap = medSize * 0.35, merged = true, guard = 0;
+  while (merged && guard < 50) {
+    merged = false; guard++;
+    outer:
+    for (var i = 0; i < boxes.length; i++) {
+      for (var j = i + 1; j < boxes.length; j++) {
+        var a = boxes[i], b = boxes[j];
+        if (a.x0 - gap <= b.x1 && b.x0 - gap <= a.x1 && a.y0 - gap <= b.y1 && b.y0 - gap <= a.y1) {
+          a.x0 = Math.min(a.x0, b.x0); a.y0 = Math.min(a.y0, b.y0);
+          a.x1 = Math.max(a.x1, b.x1); a.y1 = Math.max(a.y1, b.y1);
+          boxes.splice(j, 1); merged = true;
+          break outer;
+        }
+      }
+    }
+  }
+  /* 過大嘅合併區（例如成行文字被黐埋）丟棄 */
+  boxes = boxes.filter(function (b) {
+    return (b.x1 - b.x0 + 1) <= w * 0.85 && (b.y1 - b.y0 + 1) <= h * 0.85;
+  });
+  if (!boxes.length) { return []; }
+  /* 分行（y 為主）→ 行內 x 排序 */
+  boxes.sort(function (a, b) { return a.y0 - b.y0 || a.x0 - b.x0; });
+  var lines = [], cur = null;
+  boxes.forEach(function (b) {
+    if (!cur || b.y0 > cur.y1) { cur = { y1: b.y1, items: [] }; lines.push(cur); }
+    cur.items.push(b);
+    if (b.y1 > cur.y1) { cur.y1 = b.y1; }
+  });
+  var out = [];
+  lines.forEach(function (ln) {
+    ln.items.sort(function (a, b) { return a.x0 - b.x0; });
+    out.push.apply(out, ln.items);
+  });
+  return out;
+}
+
+/* ==================== 旗號 Semaphore ==================== */
+/* 與 CODE App 對齊：讀者視角，0 = 上，順時針（45 = 右上，90 = 右 … 315 = 左上） */
+var SEM_ANGLES = { 'A':[180,225],'B':[180,270],'C':[180,315],'D':[180,0],'E':[180,45],'F':[180,90],'G':[180,135],'H':[225,270],'I':[225,315],'J':[90,0],'K':[225,0],'L':[225,45],'M':[225,90],'N':[225,135],'O':[270,315],'P':[270,0],'Q':[270,45],'R':[270,90],'S':[270,135],'T':[315,0],'U':[315,45],'V':[0,135],'W':[45,90],'X':[45,135],'Y':[315,90],'Z':[135,90] };
+function angNorm(a) { a %= 360; if (a < 0) { a += 360; } return a; }
+function angDiff(a, b) {
+  var d = Math.abs(angNorm(a) - angNorm(b));
+  return d > 180 ? 360 - d : d;
+}
+function nearestCardinal(a) { return angNorm(Math.round(a / 45) * 45); }
+/* 由兩支旗角度（任何度數）評分全部字母；分數 = 兩臂相似度平均（0–1） */
+function semCandidates(a1, a2) {
+  var out = [];
+  for (var L in SEM_ANGLES) {
+    var p = SEM_ANGLES[L];
+    var s1 = Math.max(0, 1 - Math.min(angDiff(a1, p[0]), angDiff(a1, p[1])) / 40);
+    var s2 = Math.max(0, 1 - Math.min(angDiff(a2, p[0]), angDiff(a2, p[1])) / 40);
+    out.push({ letter: L, score: (s1 + s2) / 2 });
+  }
+  out.sort(function (x, y) { return y.score - x.score; });
+  return out;
+}
+function semLookup(a1, a2) { return semCandidates(a1, a2)[0]; }
+
+/* ==================== Pigpen對照表資料（與 CODE App 完全一致） ==================== */
+var PIGPEN_BASE = {
+  'A':'M35,10 L35,35 L10,35','B':'M10,10 L10,35 L35,35 L35,10','C':'M10,10 L10,35 L35,35',
+  'D':'M10,10 L35,10 L35,35 L10,35','E':'M10,10 L35,10 L35,35 L10,35 Z','F':'M35,10 L10,10 L10,35 L35,35',
+  'G':'M35,35 L35,10 L10,10','H':'M10,35 L10,10 L35,10 L35,35','I':'M10,35 L10,10 L35,10',
+  'S':'M10,10 L22.5,22.5 L35,10','T':'M35,10 L22.5,22.5 L35,35','U':'M10,35 L22.5,22.5 L35,35','V':'M10,10 L22.5,22.5 L10,35'
+};
+function pigpenData(letter) {
+  var c = letter.toUpperCase();
+  var dot = 'JKLMNOPQR'.indexOf(c) !== -1;
+  var path = PIGPEN_BASE[c];
+  if (!path) {
+    var map = { 'J':'A','K':'B','L':'C','M':'D','N':'E','O':'F','P':'G','Q':'H','R':'I' };
+    path = map[c] ? PIGPEN_BASE[map[c]] : null;
+  }
+  var dp = { x: 22.5, y: 22.5 };
+  if (c === 'W') { path = PIGPEN_BASE.S; dot = true; dp = { x: 22.5, y: 15 }; }
+  if (c === 'X') { path = PIGPEN_BASE.T; dot = true; dp = { x: 30, y: 22.5 }; }
+  if (c === 'Y') { path = PIGPEN_BASE.U; dot = true; dp = { x: 22.5, y: 30 }; }
+  if (c === 'Z') { path = PIGPEN_BASE.V; dot = true; dp = { x: 15, y: 22.5 }; }
+  return path ? { path: path, dot: dot, dp: dp } : null;
+}
+
+/* ==================== 火柴人繪圖（旗號對照表用） ==================== */
+function drawSemaphoreFigure(ctx, letter, s) {
+  var p = SEM_ANGLES[letter.toUpperCase()];
+  if (!p) { return; }
+  ctx.clearRect(0, 0, s, s);
+  ctx.lineWidth = Math.max(2, s * 0.045);
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#e9f0ff';
+  var cx = s * 0.5;
+  /* 頭 */
+  ctx.beginPath();
+  ctx.arc(cx, s * 0.14, s * 0.08, 0, Math.PI * 2);
+  ctx.stroke();
+  /* 身 */
+  ctx.beginPath();
+  ctx.moveTo(cx, s * 0.22);
+  ctx.lineTo(cx, s * 0.6);
+  /* 腳 */
+  ctx.moveTo(cx, s * 0.6); ctx.lineTo(s * 0.34, s * 0.92);
+  ctx.moveTo(cx, s * 0.6); ctx.lineTo(s * 0.66, s * 0.92);
+  ctx.stroke();
+  /* 兩臂＋旗 */
+  for (var i = 0; i < 2; i++) {
+    var rad = p[i] * Math.PI / 180;
+    var dx = Math.sin(rad), dy = -Math.cos(rad);
+    var ex = cx + dx * s * 0.32, ey = s * 0.28 + dy * s * 0.32;
+    ctx.beginPath();
+    ctx.moveTo(cx, s * 0.28);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(ex, ey);
+    ctx.rotate(rad);
+    ctx.fillStyle = '#ffcc00';
+    ctx.fillRect(-s * 0.02, -s * 0.115, s * 0.15, s * 0.23);
+    ctx.restore();
+  }
+}
+
+global.ScoutDecodeCV = {
+  otsuThreshold: otsuThreshold,
+  isInkLight: isInkLight,
+  binarize: binarize,
+  connectedComponents: connectedComponents,
+  median: median,
+  MORSE_TABLE: MORSE_TABLE,
+  MORSE_REVERSE: MORSE_REVERSE,
+  decodeMorseRaw: decodeMorseRaw,
+  recognizeMorse: recognizeMorse,
+  BRAILLE_MAP: BRAILLE_MAP,
+  BRAILLE_BY_BITS: BRAILLE_BY_BITS,
+  recognizeBraille: recognizeBraille,
+  findSymbols: findSymbols,
+  SEM_ANGLES: SEM_ANGLES,
+  angNorm: angNorm,
+  angDiff: angDiff,
+  nearestCardinal: nearestCardinal,
+  semCandidates: semCandidates,
+  semLookup: semLookup,
+  pigpenData: pigpenData,
+  drawSemaphoreFigure: drawSemaphoreFigure
+};
+})(this);
+/* CV-CORE-END */
+</script>
+
+<script>
+/* TOOLS-CORE-BEGIN */
+(function (global) {
+'use strict';
+/* ==================== 座標 Grid（與 CODE App 對齊） ==================== */
+/* CODE：pair = key[欄] + key[列]；方格 I/J 共用；J/Z 編碼時原樣留低 */
+var GRID_ALPHABET = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'; /* 25 格；DECODE 預埋 Z places (CODE 暫時編唔到 Z，睇 README） */
+function normalizeGridKey(v) {
+  var clean = String(v == null ? '' : v).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
+  return (clean + 'SCOUT').slice(0, 5);
+}
+function decodeGridPair(pair, key) {
+  var k = normalizeGridKey(key);
+  var c = k.indexOf(pair.charAt(0));
+  var r = k.indexOf(pair.charAt(1));
+  if (c < 0 || r < 0) { return null; }
+  var i = r * 5 + c;
+  return i < GRID_ALPHABET.length ? GRID_ALPHABET.charAt(i) : null;
+}
+function decodeGridText(text, key) {
+  var out = '';
+  var tokens = String(text || '').trim().split(/\s+/).filter(Boolean);
+  for (var i = 0; i < tokens.length; i++) {
+    var t = tokens[i].toUpperCase();
+    if (t === '/') { out += ' '; continue; }
+    if (t.length === 1) { out += t; continue; } /* CODE 編 J/Z 時會原樣留低 */
+    if (t.length === 2) { out += decodeGridPair(t, key) || '?'; }
+    else { out += '?'; }
+  }
+  return out;
+}
+/* ==================== PHONE T9（與 CODE App 對齊） ==================== */
+var PHONE_GROUPS = { '2':'ABC', '3':'DEF', '4':'GHI', '5':'JKL', '6':'MNO', '7':'PQRS', '8':'TUV', '9':'WXYZ' };
+function decodePhoneToken(tok) {
+  var t = String(tok || '').trim();
+  if (!t) { return ''; }
+  if (t === '/') { return ' '; }
+  if (/^[2-9][1-4]$/.test(t)) {
+    var g = PHONE_GROUPS[t.charAt(0)];
+    var pIdx = parseInt(t.charAt(1), 10) - 1;
+    if (pIdx < g.length) { return g.charAt(pIdx); }
+    return '?'; /* 呢個鍵冇咁多字母（例如 '24' 喺 2=ABC 唔存在） */
+  }
+  if (/^[01]$/.test(t)) { return t; }
+  if (/^[A-Z]$/.test(t)) { return t; }
+  return '?';
+}
+function decodePhoneText(text) {
+  var out = '';
+  var tokens = String(text || '').trim().split(/\s+/).filter(Boolean);
+  for (var i = 0; i < tokens.length; i++) { out += decodePhoneToken(tokens[i]); }
+  return out;
+}
+/* ==================== NATO PHONETIC（與 CODE App 對齊） ==================== */
+var NATO_WORDS = { 'ALFA':'A','ALPHA':'A','BRAVO':'B','CHARLIE':'C','DELTA':'D','ECHO':'E','FOXTROT':'F','GOLF':'G','HOTEL':'H','INDIA':'I','JULIETT':'J','JULIET':'J','KILO':'K','LIMA':'L','MIKE':'M','NOVEMBER':'N','OSCAR':'O','PAPA':'P','QUEBEC':'Q','ROMEO':'R','SIERRA':'S','TANGO':'T','UNIFORM':'U','VICTOR':'V','WHISKEY':'W','XRAY':'X','YANKEE':'Y','ZULU':'Z' };
+function decodeNatoWord(word) {
+  var w = String(word || '').toUpperCase().replace(/[^A-Z]/g, '');
+  return NATO_WORDS[w] || null;
+}
+function decodeNatoText(text) {
+  var out = '';
+  var tokens = String(text || '').trim().split(/\s+/).filter(Boolean);
+  for (var i = 0; i < tokens.length; i++) {
+    var L = decodeNatoWord(tokens[i]);
+    if (L) { out += L; }
+    else {
+      var clean = tokens[i].toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (clean) { out += ' ' + clean + ' '; }
+    }
+  }
+  return out.replace(/ +/g, ' ').trim();
+}
+global.ScoutDecodeTools = {
+  GRID_ALPHABET: GRID_ALPHABET,
+  normalizeGridKey: normalizeGridKey,
+  decodeGridPair: decodeGridPair,
+  decodeGridText: decodeGridText,
+  PHONE_GROUPS: PHONE_GROUPS,
+  decodePhoneToken: decodePhoneToken,
+  decodePhoneText: decodePhoneText,
+  NATO_WORDS: NATO_WORDS,
+  decodeNatoWord: decodeNatoWord,
+  decodeNatoText: decodeNatoText
+};
+})(this);
+/* TOOLS-CORE-END */
+</script>
+
+<script>
+/* 拍照解密模組接線（全部本機運算） */
+(function () {
+'use strict';
+var core = window.ScoutDecodeCore, cv = window.ScoutDecodeCV, ui = window.ScoutDecodeUI;
+if (!core || !cv || !ui) { return; }
+function $(id) { return document.getElementById(id); }
+
+var photoRun = $('photoRun'), fileIn = $('photoFile'), wrap = $('photoWrap'), canvas = $('photoCanvas'), msgEl = $('photoMsg');
+var panels = { morse: $('panelMorse'), braille: $('panelBraille'), pigpen: $('panelPigpen'), sem: $('panelSem'), ocr: $('panelOcr') };
+var typeBtns = Array.prototype.slice.call(document.querySelectorAll('.ptype'));
+var MAXSIDE = 900;
+var st = { type: '', gray: null, w: 0, h: 0, base: null, sem: { taps: [], seq: '' }, pig: { letters: [], active: 0, comps: [] }, chartBuilt: {} };
+
+function setMsg(s) { msgEl.textContent = s || ''; }
+function pct(v) { return Math.round(v * 100); }
+
+function selectType(t) {
+  st.type = t;
+  typeBtns.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-ptype') === t ? 'true' : 'false'); });
+  photoRun.hidden = false;
+  for (var k in panels) { panels[k].hidden = (k !== t); }
+  wrap.classList.toggle('semTap', t === 'sem');
+  $('semTapHint').hidden = (t !== 'sem');
+  setMsg('');
+  if (st.base) { run(t); }
+}
+typeBtns.forEach(function (b) {
+  b.addEventListener('click', function () { selectType(b.getAttribute('data-ptype')); });
+});
+
+function useText(s) {
+  if (!s) { ui.toast('No text to send'); return; }
+  ui.setInput(s);
+  ui.scrollToMain();
+  ui.toast('Sent to main decoder');
+}
+
+/* 載入相片 → 縮放到 MAXSIDE → 灰階陣列 */
+fileIn.addEventListener('change', function () {
+  var f = fileIn.files && fileIn.files[0];
+  fileIn.value = '';
+  if (!f) { return; }
+  var url = URL.createObjectURL(f);
+  function processImage(img) {
+    var sc = Math.min(1, MAXSIDE / Math.max(img.width, img.height));
+    var w = Math.max(1, Math.round(img.width * sc));
+    var h = Math.max(1, Math.round(img.height * sc));
+    var off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    var c = off.getContext('2d');
+    c.drawImage(img, 0, 0, w, h);
+    var data = c.getImageData(0, 0, w, h).data;
+    var gray = new Uint8Array(w * h);
+    for (var i = 0, p = 0; i < gray.length; i++, p += 4) {
+      gray[i] = (data[p] * 0.299 + data[p + 1] * 0.587 + data[p + 2] * 0.114) | 0;
+    }
+    st.gray = gray; st.w = w; st.h = h; st.base = off;
+    canvas.width = w; canvas.height = h;
+    wrap.hidden = false;
+    drawBase();
+    setMsg('Photo loaded (' + w + '×' + h + ').');
+    run(st.type);
+  }
+  /* 用手機影嘅相多數內含 EXIF 旋轉；用 createImageBitmap(from-image) 尊重方向，
+     failed 或唔支援嘅瀏覽器就退回 <img> 載入（行為同舊版一致）。 */
+  if (window.createImageBitmap) {
+    window.createImageBitmap(f, { imageOrientation: 'from-image' }).then(function (bmp) {
+      URL.revokeObjectURL(url);
+      processImage(bmp);
+      bmp.close();
+    }).catch(function () {
+      var img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); processImage(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); setMsg('Could not open this photo. Try another.'); };
+      img.src = url;
+    });
+  } else {
+    var img = new Image();
+    img.onload = function () { URL.revokeObjectURL(url); processImage(img); };
+    img.onerror = function () { URL.revokeObjectURL(url); setMsg('Could not open this photo. Try another.'); };
+    img.src = url;
+  }
+});
+
+function drawBase() {
+  var c = canvas.getContext('2d');
+  c.drawImage(st.base, 0, 0);
+}
+function run(t) {
+  if (t === 'morse') { runMorse(); }
+  else if (t === 'braille') { runBraille(); }
+  else if (t === 'pigpen') { runPigpen(); }
+  else if (t === 'sem') { resetSemTaps(); }
+  else if (t === 'ocr') { runOcr(); }
+}
+
+/* ==================== 摩斯 ==================== */
+var morseRaw = $('morseRaw'), morseText = $('morseText'), morseConf = $('morseConf'), morseWarn = $('morseWarn');
+function runMorse() {
+  var res = cv.recognizeMorse(st.gray, st.w, st.h);
+  morseRaw.value = res.raw;
+  morseWarn.textContent = (res.warnings || []).join('；');
+  morseConf.textContent = res.elements.length ? ('Average confidence ' + pct(res.conf) + '% (' + res.elements.length + ' symbols). Edit the raw Morse above if needed.') : '';
+  updateMorse();
+}
+function updateMorse() {
+  var t = cv.decodeMorseRaw(morseRaw.value);
+  morseText.textContent = t || '—';
+}
+morseRaw.addEventListener('input', updateMorse);
+$('morseUse').addEventListener('click', function () { useText(morseText.textContent === '—' ? '' : morseText.textContent); });
+
+/* ==================== 點字 ==================== */
+var brailleText = $('brailleText'), brailleConf = $('brailleConf'), brailleWarn = $('brailleWarn');
+function runBraille() {
+  var res = cv.recognizeBraille(st.gray, st.w, st.h);
+  brailleText.value = res.text;
+  brailleWarn.textContent = (res.warnings || []).join('；');
+  brailleConf.textContent = res.cells.length ? ('Average confidence ' + pct(res.conf) + '% (' + res.cells.length + ' cells). Check and edit the result if needed.') : '';
+}
+$('brailleUse').addEventListener('click', function () { useText(brailleText.value.trim()); });
+
+/* ==================== Pigpen ==================== */
+var pigCrops = $('pigpenCrops'), pigChart = $('pigpenChart'), pigText = $('pigpenText');
+function buildPigpenChart() {
+  if (st.chartBuilt.pigpen) { return; }
+  st.chartBuilt.pigpen = true;
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function (L) {
+    var d = cv.pigpenData(L);
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chartcell';
+    b.setAttribute('data-ch', L);
+    b.setAttribute('aria-label', 'Add letter ' + L);
+    b.innerHTML = '<svg width="34" height="34" viewBox="0 0 45 45" aria-hidden="true"><path d="' + d.path + '" fill="none" stroke="#e9f0ff" stroke-width="3"/>' + (d.dot ? '<circle cx="' + d.dp.x + '" cy="' + d.dp.y + '" r="3.2" fill="#ffcc00"/>' : '') + '</svg><b>' + L + '</b>';
+    pigChart.appendChild(b);
+  });
+}
+function runPigpen() {
+  buildPigpenChart();
+  st.pig = { letters: [], active: 0, comps: cv.findSymbols(st.gray, st.w, st.h) };
+  pigText.value = '';
+  pigCrops.innerHTML = '';
+  if (!st.pig.comps.length) {
+    setMsg('No symbols found. Type below or use the chart.');
+    return;
+  }
+  setMsg('Segmented ' + st.pig.comps.length + ' symbols (left to right, top to bottom). Match each using the chart.');
+  var pad = Math.round(Math.min(st.w, st.h) * 0.015) + 2;
+  st.pig.comps.forEach(function (b, i) {
+    var item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'cropitem' + (i === 0 ? ' active' : '');
+    item.setAttribute('data-idx', String(i));
+    item.setAttribute('aria-label', 'Symbol ' + (i + 1) + '');
+    var cv2 = document.createElement('canvas');
+    cv2.width = 96; cv2.height = 96;
+    var g = cv2.getContext('2d');
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, 96, 96);
+    var bw = Math.min(st.w, b.x1 + pad) - Math.max(0, b.x0 - pad);
+    var bh = Math.min(st.h, b.y1 + pad) - Math.max(0, b.y0 - pad);
+    var sx = Math.max(0, b.x0 - pad), sy = Math.max(0, b.y0 - pad);
+    var sc = Math.min(96 / Math.max(1, bw), 96 / Math.max(1, bh));
+    g.drawImage(st.base, sx, sy, bw, bh, (96 - bw * sc) / 2, (96 - bh * sc) / 2, bw * sc, bh * sc);
+    var num = document.createElement('span');
+    num.className = 'cnum';
+    num.textContent = String(i + 1);
+    item.appendChild(cv2);
+    item.appendChild(num);
+    item.addEventListener('click', function () {
+      st.pig.active = parseInt(item.getAttribute('data-idx'), 10);
+      refreshPigActive();
+    });
+    pigCrops.appendChild(item);
+  });
+}
+function refreshPigActive() {
+  Array.prototype.forEach.call(pigCrops.children, function (el, i) {
+    el.classList.toggle('active', i === st.pig.active);
+  });
+}
+function pigAssign(L) {
+  var arr = Array.from(pigText.value.toUpperCase());
+  var idx = Math.min(st.pig.active, arr.length);
+  if (st.pig.comps.length && idx >= st.pig.comps.length) { return; }
+  arr[idx] = L;
+  pigText.value = arr.join('');
+  st.pig.active = idx + 1;
+  refreshPigActive();
+}
+pigChart.addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-ch]');
+  if (b) { pigAssign(b.getAttribute('data-ch')); }
+});
+pigText.addEventListener('input', function () {
+  st.pig.active = Array.from(pigText.value).length;
+  refreshPigActive();
+});
+$('pigpenUndo').addEventListener('click', function () {
+  var arr = Array.from(pigText.value);
+  arr.splice(Math.max(0, st.pig.active - 1), 1);
+  pigText.value = arr.join('');
+  st.pig.active = Math.max(0, st.pig.active - 1);
+  refreshPigActive();
+});
+$('pigpenUse').addEventListener('click', function () { useText(pigText.value.trim()); });
+
+/* ==================== 旗號 Semaphore ==================== */
+var semCands = $('semCands'), semText = $('semText'), semChart = $('semChart'), semTapHint = $('semTapHint');
+var TAP_LABELS = ['①', '②', '③'];
+function buildSemChart() {
+  if (st.chartBuilt.sem) { return; }
+  st.chartBuilt.sem = true;
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function (L) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chartcell';
+    b.setAttribute('data-ch', L);
+    b.setAttribute('aria-label', 'Add letter ' + L);
+    var c = document.createElement('canvas');
+    c.width = 56; c.height = 56;
+    cv.drawSemaphoreFigure(c.getContext('2d'), L, 56);
+    b.appendChild(c);
+    var t = document.createElement('b');
+    t.textContent = L;
+    b.appendChild(t);
+    semChart.appendChild(b);
+  });
+}
+function resetSemTaps() {
+  buildSemChart();
+  st.sem.taps = [];
+  semCands.innerHTML = '';
+  semTapHint.hidden = (st.type !== 'sem');
+  drawSemOverlay();
+}
+function tapAngle(dx, dy) {
+  return cv.angNorm(Math.atan2(dx, -dy) * 180 / Math.PI);
+}
+function drawSemOverlay() {
+  drawBase();
+  var c = canvas.getContext('2d');
+  st.sem.taps.forEach(function (t, i) {
+    c.beginPath();
+    c.arc(t.x, t.y, Math.max(9, st.w * 0.015), 0, Math.PI * 2);
+    c.lineWidth = 3;
+    c.strokeStyle = '#ffcc00';
+    c.stroke();
+    c.font = 'bold 16px sans-serif';
+    c.fillStyle = '#ffcc00';
+    c.fillText(TAP_LABELS[i], t.x + 12, t.y - 10);
+  });
+}
+canvas.addEventListener('click', function (e) {
+  if (st.type !== 'sem' || !st.base) { return; }
+  if (st.sem.taps.length >= 3) { return; }
+  var r = canvas.getBoundingClientRect();
+  var x = (e.clientX - r.left) * (canvas.width / r.width);
+  var y = (e.clientY - r.top) * (canvas.height / r.height);
+  st.sem.taps.push({ x: x, y: y });
+  drawSemOverlay();
+  if (st.sem.taps.length === 3) { computeSem(); }
+});
+function computeSem() {
+  var t = st.sem.taps;
+  var a1 = tapAngle(t[0].x - t[2].x, t[0].y - t[2].y);
+  var a2 = tapAngle(t[1].x - t[2].x, t[1].y - t[2].y);
+  var c1 = cv.nearestCardinal(a1), c2 = cv.nearestCardinal(a2);
+  var dev = Math.round((cv.angDiff(a1, c1) + cv.angDiff(a2, c2)) / 2);
+  var cands = cv.semCandidates(a1, a2).slice(0, 3);
+  semCands.innerHTML = '';
+  var top = cands[0];
+  cands.forEach(function (cd, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'candbtn';
+    var bar = document.createElement('span');
+    bar.className = 'cbar';
+    var fill = document.createElement('i');
+    fill.style.width = pct(cd.score) + '%';
+    bar.appendChild(fill);
+    b.appendChild(document.createTextNode(cd.letter));
+    b.appendChild(bar);
+    var sp = document.createElement('span');
+    sp.className = 'cpct';
+    sp.textContent = pct(cd.score) + '%';
+    b.appendChild(sp);
+    b.setAttribute('aria-label', 'Confirm letter ' + cd.letter + ', confidence ' + pct(cd.score) + '%');
+    b.addEventListener('click', function () { addSemLetter(cd.letter); });
+    semCands.appendChild(b);
+  });
+  setMsg('Angles ' + Math.round(a1) + '°/' + Math.round(a2) + '° (nearest increment differs by about ' + dev + '°). Choose a candidate or use the chart.' + (i0(top) ? ' The top candidate has low confidence; check the chart.' : ''));
+  function i0(x) { return x.score < 0.8; }
+}
+function addSemLetter(L) {
+  st.sem.seq += L;
+  semText.value = st.sem.seq;
+  st.sem.taps = [];
+  semCands.innerHTML = '';
+  drawSemOverlay();
+  setMsg('Added ' + L + '. Tap the next character (three points), or use the chart.');
+}
+semChart.addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-ch]');
+  if (b) { addSemLetter(b.getAttribute('data-ch')); }
+});
+semText.addEventListener('input', function () { st.sem.seq = semText.value.toUpperCase(); });
+$('semResetTaps').addEventListener('click', resetSemTaps);
+$('semUse').addEventListener('click', function () { useText(semText.value.trim()); });
+/* ==================== Lookup tools：摩斯／電話／座標／NATO ==================== */
+var tools = window.ScoutDecodeTools;
+function wireMini(inId, outId, copyId, sendId, fn) {
+  var inp = $(inId), out = $(outId);
+  function update() { var t = fn(inp.value); out.textContent = t || '—'; }
+  inp.addEventListener('input', update);
+  update();
+  $(copyId).addEventListener('click', function () { ui.copy(out.textContent === '—' ? '' : out.textContent); });
+  $(sendId).addEventListener('click', function () { useText(out.textContent === '—' ? '' : out.textContent); });
+}
+if (tools) {
+  wireMini('morseIn', 'morseOut', 'morseCopy', 'morseSend', function (v) {
+    return cv.decodeMorseRaw(String(v).replace(/[·•]/g, '.').replace(/[—–_]/g, '-'));
+  });
+  wireMini('phoneIn', 'phoneOut', 'phoneCopy', 'phoneSend', function (v) { return tools.decodePhoneText(v); });
+  wireMini('gridIn', 'gridOut', 'gridCopy', 'gridSend', function (v) { return tools.decodeGridText(v, $('gridKey').value); });
+  $('gridKey').addEventListener('input', function () {
+    $('gridOut').textContent = tools.decodeGridText($('gridIn').value, this.value) || '—';
+  });
+  wireMini('natoIn', 'natoOut', 'natoCopy', 'natoSend', function (v) { return tools.decodeNatoText(v); });
+}
+
+/* ==================== Printed English OCR（唯一要上網嘅功能） ==================== */
+var ocrStatus = $('ocrStatus'), ocrText = $('ocrText'), ocrConf = $('ocrConf');
+var ocrLoading = false;
+function loadTesseract(cb) {
+  if (window.Tesseract) { cb(null); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+  s.onload = function () { cb(null); };
+  s.onerror = function () { cb(new Error('cdn')); };
+  document.head.appendChild(s);
+}
+function runOcr() {
+  if (!st.base) { return; }
+  if (ocrLoading) { return; }
+  if (!navigator.onLine) { setMsg('Offline: an internet connection is required to load OCR. Other tools still work.'); return; }
+  ocrLoading = true;
+  ocrStatus.textContent = 'Loading OCR engine and language data…';
+  ocrText.value = '';
+  ocrConf.textContent = '';
+  loadTesseract(function (err) {
+    if (err) {
+      ocrLoading = false;
+      ocrStatus.textContent = '';
+      setMsg('Could not load OCR engine. Check your connection; other tools still work.');
+      return;
+    }
+    ocrStatus.textContent = 'Recognizing…';
+    window.Tesseract.recognize(st.base, 'eng', {
+      logger: function (m) {
+        if (m && m.status) {
+          ocrStatus.textContent = m.status + (m.progress != null ? ' ' + Math.round(m.progress * 100) + '%' : '');
+        }
+      }
+    }).then(function (r) {
+      ocrLoading = false;
+      ocrStatus.textContent = '';
+      ocrText.value = (r.data && r.data.text ? r.data.text : '').trim();
+      ocrConf.textContent = (r.data && r.data.confidence != null)
+        ? ('Machine confidence ' + Math.round(r.data.confidence) + '% — OCR is not always accurate; check every character.')
+        : '';
+      setMsg('OCR complete. Send to the main decoder or paste into a lookup tool.');
+    }).catch(function (e) {
+      ocrLoading = false;
+      ocrStatus.textContent = '';
+      setMsg('OCR failed (' + (e && e.message ? e.message : 'unknown error') + '). Try a brighter photo.');
+    });
+  });
+}
+$('ocrUse').addEventListener('click', function () { useText(ocrText.value.trim()); });
+})();
+</script>
+</body>
+</html>
