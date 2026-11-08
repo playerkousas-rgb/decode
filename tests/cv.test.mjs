@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
-const html = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'), 'utf8');
+const html = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', (process.env.SCOUT_TEST_HTML || 'index.html')), 'utf8');
 
 function section(name) {
   const re = new RegExp('\\/\\* ' + name + '-BEGIN \\*\\/([\\s\\S]*?)\\/\\* ' + name + '-END \\*\\/');

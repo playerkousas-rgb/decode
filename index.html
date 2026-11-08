@@ -29,6 +29,8 @@
   .topbar{max-width:760px;margin:0 auto;padding:22px 16px 8px;display:flex;align-items:center;gap:12px}
   .crest{flex:0 0 auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
   .brandline{min-width:0}
+  .language-link{margin-left:auto;color:var(--gold);font-weight:700;white-space:nowrap;padding:8px;border:1px solid var(--line);border-radius:10px}
+  .language-link:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   .brand-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .brand-kicker{font-size:.72rem;letter-spacing:.4em;color:var(--muted);font-weight:800}
   .brand-name{font-size:1.55rem;font-weight:900;letter-spacing:.1em;color:var(--gold);line-height:1.1}
@@ -311,6 +313,7 @@
     </div>
     <p class="brand-sub">密碼解碼助手 — 見到密文，即刻還原。想加密？用 CODE App。</p>
   </div>
+  <a class="language-link" href="index-en.html" lang="en" hreflang="en">English</a>
 </header>
 <nav class="tool-nav" aria-label="快速跳至解碼工具">
   <a href="#inputSection">✍️ 輸入密文</a>
@@ -328,10 +331,10 @@
     <textarea id="cipher" maxlength="200" rows="3" spellcheck="false" autocapitalize="characters" autocomplete="off" aria-describedby="cipherMeta" placeholder="例：KHOOR ZRUOG"></textarea>
     <div class="input-tools">
       <button type="button" id="btnExample" class="btn ghost">載入範例</button>
-      <button type="button" id="btnClear" class="btn ghost">清除全部</button>
+      <button type="button" id="btnClear" class="btn ghost">清除主解碼區</button>
       <span id="count" class="count">0/200</span>
     </div>
-    <p id="cipherMeta" class="privacy-note">🔒 僅保存在此裝置；清除會一併重設位移與本機草稿。</p>
+    <p id="cipherMeta" class="privacy-note">🔒 主解碼區草稿僅保存在此裝置；清除會重設位移及草稿，不會清除其他工具。</p>
   </section>
 
   <!-- 凱撒 -->
@@ -512,7 +515,7 @@
       </div>
 
       <div id="panelOcr" class="ppanel" hidden>
-        <span class="plabel">印刷英文 OCR — 唯一要上網嘅功能：首次載入引擎約 2–5MB，之後瀏覽器有快取</span>
+        <span class="plabel">印刷英文 OCR — 唯一要上網嘅功能：須上網載入引擎及語言資料；快取視乎瀏覽器</span>
         <p class="pconf" id="ocrStatus"></p>
         <span class="plabel">認出嘅字（可人手改）</span>
         <textarea id="ocrText" class="ptextarea" spellcheck="false"></textarea>
@@ -533,14 +536,14 @@
       <li>方向：還原 = 密文 − N，即字母<b>向前移</b>（F→A 若 N=5）。26 個位移全部包晒，唔使驚方向搞反。</li>
       <li>唔知位移幾多？掃吓 0–25 全表，最似人話嗰行就係答案。</li>
       <li>拍照辨識係實驗版：摩斯／點字係自動辨識＋信心度；朱高／旗號係輔助對照，唔會裝 100% 準，記得核對。印刷英文 OCR 要上網載入引擎（唯一要網絡嘅功能），離線時其他功能照用。</li>
-      <li>輸入同上次揀嘅 N 會記喺本機；㩒「清除」就刪走。</li>
+      <li>輸入同上次揀嘅 N 會記喺本機；㩒「清除主解碼區」就刪除草稿及重設位移。</li>
     </ul>
   </section>
 
 </main>
 
 <footer>
-  <p>Scout Decode v2.4（介面升級・查表＋OCR・完整對齊 CODE） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
+  <p>Scout Decode v2.5（介面升級・查表＋OCR・完整對齊 CODE） ・ 純前端工具：唔使登入、冇後端、唔連雲端；輸入過嘅字只留喺你部機。</p>
   <p>© 2026 Scout System ・ 保留一切權利（All rights reserved）・ DECODE 係獨立 App，與 Scout System CODE 分開派發、互不連結。加密請用 CODE。</p>
 </footer>
 
@@ -1655,7 +1658,7 @@ function runOcr() {
   if (ocrLoading) { return; }
   if (!navigator.onLine) { setMsg('而家離線：OCR 引擎要上網先載入到。其他功能照常用。'); return; }
   ocrLoading = true;
-  ocrStatus.textContent = '載入 OCR 引擎中（首次約 2–5MB，之後有快取）…';
+  ocrStatus.textContent = '載入 OCR 引擎中及語言資料…';
   ocrText.value = '';
   ocrConf.textContent = '';
   loadTesseract(function (err) {

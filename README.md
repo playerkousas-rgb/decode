@@ -9,6 +9,11 @@
 - **禁止**喺 CODE 側欄或導覽加任何通往 DECODE 嘅連結；CODE 嗰邊完全唔使改。
 - 本 App 專為「對住紙／投影上嘅密文」現場解題而設，來源唔保證係本系統出嘅卷。
 
+## 語言 / Language
+
+- 繁體中文：`index.html`；English: `index-en.html`。頁首可切換，主解碼草稿及位移共用本機儲存。
+- Both pages work offline except for loading the OCR engine and language data. They are standalone files; keep their functionality in sync when making changes.
+
 ## 功能（第一期）
 
 | 功能 | 說明 |
@@ -19,7 +24,7 @@
 | 反射 Atbash | A↔Z、B↔Y……固定一組，無位移 |
 | 倒序 | 整段字元反轉（含空白），轉大寫 |
 | 複製 | 每張結果卡一鍵複製，Toast「已複製」 |
-| 本機記憶 | localStorage 記草稿、上次 N；「清除全部」會清除草稿並把 N 重設為 0 |
+| 本機記憶 | localStorage 記草稿、上次 N；「清除主解碼區」會清除主解碼草稿並把 N 重設為 0；查表及相片結果不受影響 |
 | **查表解碼** | 摩斯（`. - /`）、電話 T9、座標 Grid（KEY 預設 SCOUT）、NATO 拼音 — 即時解碼，結果可⬆入主解碼區再試凱撒／反射／倒序 |
 | **拍照解密（二期・實驗版）** | 見下方「拍照解密模組」 |
 
@@ -68,7 +73,7 @@
 
 ## 執行
 
-單檔 `index.html`、零依賴：
+兩個獨立語言頁、零 runtime 依賴：
 
 - 直接用瀏覽器打開 `index.html`（離線可用）。
 - 或本機起伺服器：`python3 -m http.server 8080` 或 `npx serve .`
@@ -85,6 +90,8 @@
 node tests/caesar.test.mjs   # 凱撒還原／反射／倒序（23 項）
 node tests/cv.test.mjs       # 拍照辨識核心：摩斯／點字合成影像、Semaphore 角度表（22 項）
 node tests/tools.test.mjs    # 電話 T9／座標 Grid／NATO 對齊 CODE 規則（31 項）
+# 英文頁執行同一組測試：
+for f in tests/caesar.test.mjs tests/cv.test.mjs tests/tools.test.mjs; do SCOUT_TEST_HTML=index-en.html node "$f"; done
 ```
 
 測試直接由 `index.html` 抽出核心函數（`CORE`／`CV-CORE`／`TOOLS-CORE` 三段）做斷言，測嘅就係真正交付嘅代碼。
@@ -95,7 +102,7 @@ CV 測試用程式合成嘅印刷摩斯／點字影像做端到端斷言（SOS�
 
 ## 部署（Vercel）與瘦身
 
-- Vercel 自動偵測做**靜態網站（framework = Other）**，直接 serve 根目錄；輸出只有 `index.html`，**無需 `vercel.json`／`outputDirectory`**。
+- Vercel 自動偵測做**靜態網站（framework = Other）**，直接 serve 根目錄；輸出包含 `index.html` 及 `index-en.html`，**無需 `vercel.json`／`outputDirectory`**。
 - `.vercelignore` 寫明只上傳網頁產物（排除 `.git`、`tests/`、README、暫存／備份檔等），防止儲存空間爆滿。
 - 全 repo 上線部分只有約 72 KB；OCR 引擎行 CDN on-demand（釘死 `tesseract.js@5.1.1`），唔用唔會下載。
 - 防增肥守則見 **`SLIMMING.md`** —— 每次改版前必讀。
